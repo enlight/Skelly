@@ -1,0 +1,23 @@
+{
+    "FileVersion" : 3,
+	
+	"Version" : 1,
+	"VersionName" : "0.1",
+	"FriendlyName" : "Skelly",
+	"CreatedBy" : "Vadim Macagon",
+	"CreatedByURL" : "https://github.com/enlight/Skelly",
+	"Description" : "Create skeletal mesh poses, and interpolate between them using various procedural methods at runtime.",
+	"Category" : "Editor.Animation",
+	"EngineVersion" : "4.1.1",
+	
+    "Modules" :
+	[
+		{
+			"Name" : "Skelly",
+			"Type" : "Editor"
+		}
+	],
+
+	"CanContainContent" : true,
+	"IsBetaVersion" : true
+}
