@@ -31,12 +31,29 @@ class USkellyPoseFactory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
 
-public: // UFactory implementation
-	virtual FText GetDisplayName() const OVERRIDE;
-	//virtual FName GetNewAssetThumbnailOverride() const OVERRIDE;
-	virtual uint32 GetMenuCategories() const OVERRIDE;
+	/** The skeleton to be associated with a newly constructed pose. */
+	UPROPERTY()
+	class USkeleton* Skeleton;
+
+public: // UFactory interface
+	virtual FText GetDisplayName() const override;
+	//virtual FName GetNewAssetThumbnailOverride() const override;
+	virtual uint32 GetMenuCategories() const override;
+	/** 
+	 * Display a configuration dialog to allow the user to specify initial values for some
+	 * of the properties of a new pose instance.
+	 */
+	virtual bool ConfigureProperties() override;
+	/** Create and return a new pose instance. */
 	virtual UObject* FactoryCreateNew(
 		UClass* objectClass, UObject* inParent, FName objectName, EObjectFlags objectFlags, 
 		UObject* contextObject, FFeedbackContext* feedbackContext
-	) OVERRIDE;
+	) override;
+
+private:
+	/** Called by the asset picker when a skeleton asset is selected. */
+	void OnSkeletonSelected(const class FAssetData& selectedAssetData);
+
+private:
+	TSharedPtr<class SWindow> _assetPickerWindow;
 };

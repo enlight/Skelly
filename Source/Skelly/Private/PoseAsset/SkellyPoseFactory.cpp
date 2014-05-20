@@ -26,6 +26,7 @@
 #include "SkellyPoseFactory.h"
 #include "IAssetTypeActions.h"
 #include "SkellyPose.h"
+#include "ContentBrowserModule.h"
 
 #define LOCTEXT_NAMESPACE "SkellyPoseFactory"
 
@@ -54,12 +55,55 @@ uint32 USkellyPoseFactory::GetMenuCategories() const
 	return EAssetTypeCategories::Animation;
 }
 
+bool USkellyPoseFactory::ConfigureProperties()
+{
+	Skeleton = nullptr;
+
+	// create an asset picker that filters out everything but skeletons
+	FAssetPickerConfig assetPickerConfig;
+	assetPickerConfig.Filter.ClassNames.Add(USkeleton::StaticClass()->GetFName());
+	assetPickerConfig.Filter.bRecursiveClasses = true;
+	assetPickerConfig.InitialAssetViewType = EAssetViewType::List;
+	assetPickerConfig.ThumbnailScale = 0.25f;
+	assetPickerConfig.OnAssetSelected.BindUObject(this, &USkellyPoseFactory::OnSkeletonSelected);
+
+	IContentBrowserSingleton& contentBrowser =
+		FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
+
+	_assetPickerWindow = SNew(SWindow)
+		.Title(LOCTEXT("ConfigurePropertiesDlgTitle", "Pick Skeleton"))
+		.ClientSize(FVector2D(500.0f, 600.0f))
+		.SupportsMinimize(false)
+		.SupportsMaximize(false)
+		[
+			SNew(SBorder)
+			.BorderImage(FEditorStyle::GetBrush("Menu.Background"))
+			[
+				contentBrowser.CreateAssetPicker(assetPickerConfig)
+			]
+		];
+
+	// display the asset picker as a modal window and block until it's closed
+	GEditor->EditorAddModalWindow(_assetPickerWindow.ToSharedRef());
+	// at this point the actual window has either been destroyed or queued for destruction,
+	// in either case there's no longer any need to keep the wrapper SWindow alive
+	_assetPickerWindow.Reset();
+
+	return Skeleton != nullptr;
+}
+
 UObject* USkellyPoseFactory::FactoryCreateNew(UClass* objectClass, UObject* inParent, FName objectName, EObjectFlags objectFlags, UObject* contextObject, FFeedbackContext* feedbackContext)
 {
 	auto pose = CastChecked<USkellyPose>(
 		StaticConstructObject(objectClass, inParent, objectName, objectFlags)
 	);
 	return pose;
+}
+
+void USkellyPoseFactory::OnSkeletonSelected(const class FAssetData& selectedAssetData)
+{
+	Skeleton = Cast<USkeleton>(selectedAssetData.GetAsset());
+	_assetPickerWindow->RequestDestroyWindow();
 }
 
 #undef LOCTEXT_NAMESPACE

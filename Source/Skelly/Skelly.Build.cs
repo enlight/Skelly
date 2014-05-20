@@ -33,7 +33,9 @@ namespace UnrealBuildTool.Rules
                     "Slate",
                     "UnrealEd",
                     "AssetTools",
-                    "WorkspaceMenuStructure"
+                    "WorkspaceMenuStructure",
+                    "ContentBrowser",
+                    "EditorStyle"
 					// ... add private dependencies that you statically link with here ...
 				}
 			);
