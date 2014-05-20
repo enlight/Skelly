@@ -92,17 +92,19 @@ bool USkellyPoseFactory::ConfigureProperties()
 	return Skeleton != nullptr;
 }
 
-UObject* USkellyPoseFactory::FactoryCreateNew(UClass* objectClass, UObject* inParent, FName objectName, EObjectFlags objectFlags, UObject* contextObject, FFeedbackContext* feedbackContext)
+UObject* USkellyPoseFactory::FactoryCreateNew(
+	UClass* inObjectClass, UObject* inParent, FName inObjectName, EObjectFlags inObjectFlags, 
+	UObject* inContextObject, FFeedbackContext* inFeedbackContext
+)
 {
-	auto pose = CastChecked<USkellyPose>(
-		StaticConstructObject(objectClass, inParent, objectName, objectFlags)
-	);
+	auto pose = ConstructObject<USkellyPose>(inObjectClass, inParent, inObjectName, inObjectFlags);
+	pose->SetSkeleton(Skeleton);
 	return pose;
 }
 
-void USkellyPoseFactory::OnSkeletonSelected(const class FAssetData& selectedAssetData)
+void USkellyPoseFactory::OnSkeletonSelected(const class FAssetData& inSelectedAssetData)
 {
-	Skeleton = Cast<USkeleton>(selectedAssetData.GetAsset());
+	Skeleton = Cast<USkeleton>(inSelectedAssetData.GetAsset());
 	_assetPickerWindow->RequestDestroyWindow();
 }
 

@@ -30,3 +30,8 @@ USkellyPose::USkellyPose(const class FPostConstructInitializeProperties& PCIP)
 {
 	// empty
 }
+
+void USkellyPose::SetSkeleton(USkeleton* inSkeleton)
+{
+	Skeleton = inSkeleton;
+}

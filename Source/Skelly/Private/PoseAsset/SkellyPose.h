@@ -31,7 +31,20 @@ class USkellyPose : public UObject
 {
 	GENERATED_UCLASS_BODY()
 
+public:
+	void SetSkeleton(USkeleton* inSkeleton);
+
+private:
 	/** Pose in Bone Space */
 	UPROPERTY()
 	FA2Pose Pose;
+
+	/** The skeleton this pose is based on. */
+	UPROPERTY(AssetRegistrySearchable, Category=Animation, VisibleAnywhere)
+	class USkeleton* Skeleton;
+
+	// TODO: UAnimationAsset stores the skeleton guid and updates animation sequences when the
+	//       guid changes, the guid changes when the skeleton hierarchy changes so this is
+	//       probably something that should be handled for poses too. Will probably deal with this
+	//       when implementing skeleton replacement for poses.
 };

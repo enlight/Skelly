@@ -46,13 +46,13 @@ public: // UFactory interface
 	virtual bool ConfigureProperties() override;
 	/** Create and return a new pose instance. */
 	virtual UObject* FactoryCreateNew(
-		UClass* objectClass, UObject* inParent, FName objectName, EObjectFlags objectFlags, 
-		UObject* contextObject, FFeedbackContext* feedbackContext
+		UClass* inObjectClass, UObject* inParent, FName inObjectName, EObjectFlags inObjectFlags, 
+		UObject* inContextObject, FFeedbackContext* inFeedbackContext
 	) override;
 
 private:
 	/** Called by the asset picker when a skeleton asset is selected. */
-	void OnSkeletonSelected(const class FAssetData& selectedAssetData);
+	void OnSkeletonSelected(const class FAssetData& inSelectedAssetData);
 
 private:
 	TSharedPtr<class SWindow> _assetPickerWindow;
