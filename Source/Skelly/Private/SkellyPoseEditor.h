@@ -23,32 +23,50 @@
 //-------------------------------------------------------------------------------
 #pragma once
 
-#include "Toolkits/IToolkit.h"
-#include "ModuleManager.h"
+#include "Toolkits/AssetEditorToolkit.h"
 
-class IAssetTools;
-class IAssetTypeActions;
-class IToolkitHost;
 class USkellyPose;
 
 namespace Skelly {
 
-class IModule : public IModuleInterface
+/** Editor for USkellyPose assets. */
+class FPoseEditor : public FAssetEditorToolkit, public FGCObject
 {
+public: // FAssetEditorToolkit interface
+	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& tabManager) override;
+	virtual void UnregisterTabSpawners(const TSharedRef<FTabManager>& tabManager) override;
+
+	virtual FName GetToolkitFName() const override;
+	virtual FText GetBaseToolkitName() const override;
+	virtual FString GetWorldCentricTabPrefix() const override;
+	virtual FLinearColor GetWorldCentricTabColorScale() const override;
+
+public: // FGCObject interface
+	virtual void AddReferencedObjects(FReferenceCollector& collector) override;
+
 public:
-	virtual TSharedRef<class FPoseEditor> CreatePoseEditor(
+	FPoseEditor();
+
+	void InitPoseEditor(
 		EToolkitMode::Type toolkitMode, TSharedPtr<IToolkitHost>& editWithinLevelEditor,
 		USkellyPose* poseToEdit
-	) = 0;
+	);
+
+private:
+	TSharedRef<SDockTab> OnSpawnSkeletonTab(const FSpawnTabArgs& args);
+	TSharedRef<SDockTab> OnSpawnViewportTab(const FSpawnTabArgs& args);
+	TSharedRef<SDockTab> OnSpawnDetailsTab(const FSpawnTabArgs& args);
+
+private:
+	/** The pose currently being edited. */
+	USkellyPose* _currentPose;
+
+	FText _skeletonTabTitle;
+	FText _viewportTabTitle;
+	FText _detailsTabTitle;
+
+private:
+	static FName PoseEditorAppName;
 };
 
 } // namespace Skelly
-
-namespace SkellyModule {
-
-inline Skelly::IModule& Get()
-{
-	return FModuleManager::LoadModuleChecked<Skelly::IModule>("Skelly");
-}
-
-} // namespace SkellyModule

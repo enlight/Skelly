@@ -26,9 +26,29 @@
 #include "SkellyModule.h"
 #include "AssetToolsModule.h"
 #include "PoseAsset/SkellyPoseAssetTypeActions.h"
+#include "SkellyPoseEditor.h"
 #include "Skelly.generated.inl"
 
 namespace Skelly {
+
+class FModule : public IModule
+{
+public:
+	// IModule implementation
+	virtual void StartupModule() override;
+	virtual void ShutdownModule() override;
+	
+	virtual TSharedRef<FPoseEditor> CreatePoseEditor(
+		EToolkitMode::Type toolkitMode, TSharedPtr<IToolkitHost>& editWithinLevelEditor,
+		USkellyPose* PoseToEdit
+	) override;
+
+private:
+	void RegisterAssetTypeActions(IAssetTools& assetTools, TSharedRef<IAssetTypeActions> actions);
+
+private:
+	TArray<TSharedPtr<IAssetTypeActions> > _registeredAssetTypes;
+};
 
 void FModule::StartupModule()
 {
@@ -38,11 +58,27 @@ void FModule::StartupModule()
 
 void FModule::ShutdownModule()
 {
-	IAssetTools& assetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-	for (auto assetTypeActions : _registeredAssetTypes)
+	// at this point the editor may have already unloaded the AssetTools module, 
+	// in that case there's no need to unregister the previously registered asset types
+	if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
 	{
-		assetTools.UnregisterAssetTypeActions(assetTypeActions.ToSharedRef());
+		IAssetTools& assetTools = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		for (auto assetTypeActions : _registeredAssetTypes)
+		{
+			assetTools.UnregisterAssetTypeActions(assetTypeActions.ToSharedRef());
+		}
 	}
+	_registeredAssetTypes.Empty();
+}
+
+TSharedRef<FPoseEditor> FModule::CreatePoseEditor(
+	EToolkitMode::Type toolkitMode, TSharedPtr<IToolkitHost>& editWithinLevelEditor,
+	USkellyPose* poseToEdit
+)
+{
+	TSharedRef<FPoseEditor> editor(new FPoseEditor());
+	editor->InitPoseEditor(toolkitMode, editWithinLevelEditor, poseToEdit);
+	return editor;
 }
 
 void FModule::RegisterAssetTypeActions(

@@ -12,6 +12,7 @@ namespace UnrealBuildTool.Rules
 
 			PrivateIncludePaths.AddRange(
 				new string[] {
+                    "Skelly/Private"
 					// ... add other private include paths required here ...
 				}
 			);
@@ -31,7 +32,8 @@ namespace UnrealBuildTool.Rules
                     "Engine",
                     "Slate",
                     "UnrealEd",
-                    "AssetTools"
+                    "AssetTools",
+                    "WorkspaceMenuStructure"
 					// ... add private dependencies that you statically link with here ...
 				}
 			);

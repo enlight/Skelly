@@ -25,6 +25,7 @@
 #include "SkellyPrivatePCH.h"
 #include "SkellyPoseAssetTypeActions.h"
 #include "SkellyPose.h"
+#include "SkellyModule.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
@@ -52,7 +53,15 @@ void FPoseAssetTypeActions::OpenAssetEditor(
 	const EToolkitMode::Type toolkitMode = editWithinLevelEditor.IsValid() ?
 		EToolkitMode::WorldCentric : EToolkitMode::Standalone;
 
-	// TODO: Open up the pose editor for each of the passed in objects
+	// open up an editor for each passed in pose
+	for (const auto object : inObjects)
+	{
+		auto pose = Cast<USkellyPose>(object);
+		if (pose)
+		{
+			SkellyModule::Get().CreatePoseEditor(toolkitMode, editWithinLevelEditor, pose);
+		}
+	}
 }
 
 uint32 FPoseAssetTypeActions::GetCategories()
