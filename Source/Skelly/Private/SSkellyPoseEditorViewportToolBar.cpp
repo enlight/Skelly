@@ -27,6 +27,8 @@
 #include "SEditorViewport.h"
 #include "EditorViewportCommands.h"
 #include "SEditorViewportCameraMenu.h"
+#include "SEditorViewportViewMenu.h"
+#include "STransformViewportToolbar.h"
 
 namespace Skelly {
 
@@ -34,6 +36,7 @@ void SPoseEditorViewportToolBar::Construct(
 	const FArguments& inArgs, TSharedPtr<SEditorViewport> inViewport
 )
 {
+	const float menuPadding = 2.0f;
 	ChildSlot
 	[
 		SNew(SBorder)
@@ -45,7 +48,7 @@ void SPoseEditorViewportToolBar::Construct(
 			/*
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
-			.Padding(2.0f, 2.0f)
+			.Padding(menuPadding)
 			[
 				SNew(SEditorViewportToolbarMenu)
 				.ParentToolBar(SharedThis(this))
@@ -55,9 +58,23 @@ void SPoseEditorViewportToolBar::Construct(
 			*/
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
-			.Padding(2.0f, 2.0f)
+			.Padding(menuPadding)
 			[
 				SNew(SEditorViewportCameraMenu, inViewport.ToSharedRef(), SharedThis(this))
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(menuPadding)
+			[
+				SNew(SEditorViewportViewMenu, inViewport.ToSharedRef(), SharedThis(this))
+			]
+			+ SHorizontalBox::Slot()
+			.Padding(menuPadding)
+			.HAlign(HAlign_Right)
+			[
+				SNew(STransformViewportToolBar)
+				.Viewport(inViewport)
+				.CommandList(inViewport->GetCommandList())
 			]
 		]
 	];
