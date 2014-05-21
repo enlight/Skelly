@@ -23,7 +23,7 @@
 //-------------------------------------------------------------------------------
 
 #include "SkellyPrivatePCH.h"
-#include "SEditorViewportToolBarCameraMenu.h"
+#include "SEditorViewportCameraMenu.h"
 #include "EditorViewportCommands.h"
 #include "SEditorViewport.h"
 
@@ -32,22 +32,25 @@
 
 namespace Skelly {
 
-void SEditorViewportToolBarCameraMenu::Construct(
-	const FArguments& inArgs, TSharedPtr<SEditorViewport> inViewport
+void SEditorViewportCameraMenu::Construct(
+	const FArguments& inArgs, TSharedRef<SEditorViewport> inViewport,
+	TSharedRef<SViewportToolBar> inParentToolBar
 )
 {
 	_viewportWeakPtr = inViewport;
+	_menuExtenders = inArgs._MenuExtenders;
 
 	SEditorViewportToolbarMenu::Construct(
 		SEditorViewportToolbarMenu::FArguments()
-		.ParentToolBar(inArgs._ParentToolBar)
-		.Label(this, &SEditorViewportToolBarCameraMenu::GetMenuLabel)
-		.LabelIcon(this, &SEditorViewportToolBarCameraMenu::GetMenuLabelIcon)
-		.OnGetMenuContent(this, &SEditorViewportToolBarCameraMenu::GenerateMenuContent)
+		.ParentToolBar(inParentToolBar)
+		.Cursor(EMouseCursor::Default)
+		.Label(this, &SEditorViewportCameraMenu::GetMenuLabel)
+		.LabelIcon(this, &SEditorViewportCameraMenu::GetMenuLabelIcon)
+		.OnGetMenuContent(this, &SEditorViewportCameraMenu::GenerateMenuContent)
 	);
 }
 
-FText SEditorViewportToolBarCameraMenu::GetMenuLabel() const
+FText SEditorViewportCameraMenu::GetMenuLabel() const
 {
 	FText label = LOCTEXT("CameraMenuTitle_Default", "Camera");
 
@@ -82,7 +85,7 @@ FText SEditorViewportToolBarCameraMenu::GetMenuLabel() const
 	return label;
 }
 
-const FSlateBrush* SEditorViewportToolBarCameraMenu::GetMenuLabelIcon() const
+const FSlateBrush* SEditorViewportCameraMenu::GetMenuLabelIcon() const
 {
 	FName icon = NAME_None;
 
@@ -117,13 +120,14 @@ const FSlateBrush* SEditorViewportToolBarCameraMenu::GetMenuLabelIcon() const
 	return FEditorStyle::GetBrush(icon);
 }
 
-TSharedRef<SWidget> SEditorViewportToolBarCameraMenu::GenerateMenuContent() const
+TSharedRef<SWidget> SEditorViewportCameraMenu::GenerateMenuContent() const
 {
 	const bool bInShouldCloseWindowAfterMenuSelection = true;
 	TSharedPtr<SEditorViewport> viewportPtr(_viewportWeakPtr.Pin());
 	FMenuBuilder menuBuilder(
 		bInShouldCloseWindowAfterMenuSelection,
-		viewportPtr.IsValid() ? viewportPtr->GetCommandList() : nullptr
+		viewportPtr.IsValid() ? viewportPtr->GetCommandList() : nullptr,
+		_menuExtenders
 	);
 
 	if (viewportPtr.IsValid())
@@ -142,5 +146,6 @@ TSharedRef<SWidget> SEditorViewportToolBarCameraMenu::GenerateMenuContent() cons
 	return menuBuilder.MakeWidget();
 }
 
-
 } // namespace Skelly
+
+#undef LOCTEXT_NAMESPACE

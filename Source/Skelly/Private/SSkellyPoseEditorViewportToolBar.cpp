@@ -26,7 +26,7 @@
 #include "EditorStyle.h"
 #include "SEditorViewport.h"
 #include "EditorViewportCommands.h"
-#include "SEditorViewportToolBarCameraMenu.h"
+#include "SEditorViewportCameraMenu.h"
 
 namespace Skelly {
 
@@ -57,8 +57,7 @@ void SPoseEditorViewportToolBar::Construct(
 			.AutoWidth()
 			.Padding(2.0f, 2.0f)
 			[
-				SNew(SEditorViewportToolBarCameraMenu, inViewport)
-				.ParentToolBar(SharedThis(this))
+				SNew(SEditorViewportCameraMenu, inViewport.ToSharedRef(), SharedThis(this))
 			]
 		]
 	];

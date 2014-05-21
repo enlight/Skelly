@@ -27,18 +27,28 @@
 
 class SViewportToolBar;
 class SEditorViewport;
+class FExtender;
 
 namespace Skelly {
 
-class SEditorViewportToolBarCameraMenu : public SEditorViewportToolbarMenu
+/** Editor viewport menu for switching between perspective and orthographic view types. */
+class SEditorViewportCameraMenu : public SEditorViewportToolbarMenu
 {
 public:
-	SLATE_BEGIN_ARGS(SEditorViewportToolBarCameraMenu) {}
+	SLATE_BEGIN_ARGS(SEditorViewportCameraMenu) {}
 		/** The toolbar the menu is attached to. */
-		SLATE_ARGUMENT(TSharedPtr<SViewportToolBar>, ParentToolBar)
+		SLATE_ARGUMENT(TSharedPtr<FExtender>, MenuExtenders)
 	SLATE_END_ARGS()
 
-	void Construct(const FArguments& inArgs, TSharedPtr<SEditorViewport> inViewport);
+	/**
+	 * Construct the menu.
+	 * @param inViewport The viewport within which the menu will be displayed.
+	 * @param inParentToolBar The toolbar the menu will be contained in.
+	 */
+	void Construct(
+		const FArguments& inArgs, TSharedRef<SEditorViewport> inViewport, 
+		TSharedRef<SViewportToolBar> inParentToolBar
+	);
 
 private:
 	FText GetMenuLabel() const;
@@ -47,6 +57,7 @@ private:
 
 private:
 	TWeakPtr<SEditorViewport> _viewportWeakPtr;
+	TSharedPtr<FExtender> _menuExtenders;
 };
 
 } // namespace Skelly
