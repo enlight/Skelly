@@ -24,6 +24,7 @@
 #pragma once
 
 #include "Toolkits/AssetEditorToolkit.h"
+#include "PreviewScene.h"
 
 class USkellyPose;
 
@@ -52,6 +53,8 @@ public:
 		USkellyPose* poseToEdit
 	);
 
+	FPreviewScene& GetPreviewScene();
+
 private:
 	TSharedRef<SDockTab> OnSpawnSkeletonTab(const FSpawnTabArgs& args);
 	TSharedRef<SDockTab> OnSpawnViewportTab(const FSpawnTabArgs& args);
@@ -65,8 +68,18 @@ private:
 	FText _viewportTabTitle;
 	FText _detailsTabTitle;
 
+	/** The scene to be displayed in the viewport. */
+	FPreviewScene _previewScene;
+
+	TSharedPtr<class SPoseEditorViewport> _viewport;
+
 private:
 	static FName PoseEditorAppName;
 };
+
+inline FPreviewScene& FPoseEditor::GetPreviewScene()
+{
+	return _previewScene;
+}
 
 } // namespace Skelly

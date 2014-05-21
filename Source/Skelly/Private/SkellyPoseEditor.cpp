@@ -26,6 +26,7 @@
 #include "SkellyPoseEditor.h"
 #include "WorkspaceMenuStructureModule.h"
 #include "PoseAsset/SkellyPose.h"
+#include "SSkellyPoseEditorViewport.h"
 
 #define LOCTEXT_NAMESPACE "Skelly.PoseEditor"
 
@@ -113,6 +114,7 @@ void FPoseEditor::InitPoseEditor(
 )
 {
 	_currentPose = poseToEdit;
+	_viewport = SNew(SPoseEditorViewport, SharedThis(this));
 
 	TSharedRef<FTabManager::FLayout> defaultStandaloneLayout = 
 		FTabManager::NewLayout("Standalone_SkellyPoseEditor_Layout")
@@ -169,7 +171,10 @@ TSharedRef<SDockTab> FPoseEditor::OnSpawnSkeletonTab(const FSpawnTabArgs& args)
 TSharedRef<SDockTab> FPoseEditor::OnSpawnViewportTab(const FSpawnTabArgs& args)
 {
 	return SNew(SDockTab)
-		.Label(_viewportTabTitle);
+		.Label(_viewportTabTitle)
+		[
+			_viewport.ToSharedRef()
+		];
 }
 
 TSharedRef<SDockTab> FPoseEditor::OnSpawnDetailsTab(const FSpawnTabArgs& args)
