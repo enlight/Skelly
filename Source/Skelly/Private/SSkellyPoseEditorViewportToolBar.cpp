@@ -21,48 +21,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-------------------------------------------------------------------------------
-
 #include "SkellyPrivatePCH.h"
-#include "SSkellyPoseEditorViewport.h"
-#include "SkellyPoseEditorViewportClient.h"
-#include "SkellyPoseEditor.h"
 #include "SSkellyPoseEditorViewportToolBar.h"
+#include "EditorStyle.h"
+#include "SEditorViewport.h"
+#include "EditorViewportCommands.h"
+#include "SEditorViewportToolBarCameraMenu.h"
 
 namespace Skelly {
 
-void SPoseEditorViewport::Construct(const FArguments& InArgs, TSharedPtr<FPoseEditor> inPoseEditor)
+void SPoseEditorViewportToolBar::Construct(
+	const FArguments& inArgs, TSharedPtr<SEditorViewport> inViewport
+)
 {
-	_poseEditorWeakPtr = inPoseEditor;
+	ChildSlot
+	[
+		SNew(SBorder)
+		.BorderImage(FEditorStyle::GetBrush("NoBorder"))
+		.ForegroundColor(FEditorStyle::GetSlateColor("DefaultForeground"))
+		[
+			SNew(SHorizontalBox)
+			// left-most drop-down arrow menu
+			/*
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(2.0f, 2.0f)
+			[
+				SNew(SEditorViewportToolbarMenu)
+				.ParentToolBar(SharedThis(this))
+				.Image("EditorViewportToolBar.MenuDropdown")
+				.OnGetMenuContent(this, &SPoseEditorViewportToolBar::GeneratePrimaryMenu)
+			]
+			*/
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(2.0f, 2.0f)
+			[
+				SNew(SEditorViewportToolBarCameraMenu, inViewport)
+				.ParentToolBar(SharedThis(this))
+			]
+		]
+	];
 
-	SEditorViewport::Construct(SEditorViewport::FArguments());
+	SViewportToolBar::Construct(SViewportToolBar::FArguments());
 }
-
-TSharedRef<FEditorViewportClient> SPoseEditorViewport::MakeEditorViewportClient()
+/*
+TSharedRef<SWidget> SPoseEditorViewportToolBar::GeneratePrimaryMenu() const
 {
-	TSharedPtr<FPoseEditor> poseEditor = _poseEditorWeakPtr.Pin();
-	_poseEditorViewportClient = MakeShareable(
-		new FPoseEditorViewportClient(
-			poseEditor.IsValid() ? &poseEditor->GetPreviewScene() : nullptr
-		)
-	);
 
-	_poseEditorViewportClient->ViewportType = LVT_Perspective;
-	_poseEditorViewportClient->bSetListenerPosition = false;
-	_poseEditorViewportClient->SetViewLocation(EditorViewportDefs::DefaultPerspectiveViewLocation);
-	_poseEditorViewportClient->SetViewRotation(EditorViewportDefs::DefaultPerspectiveViewRotation);
-
-	return _poseEditorViewportClient.ToSharedRef();
 }
-
-TSharedPtr<SWidget> SPoseEditorViewport::MakeViewportToolbar()
-{
-	return SNew(SPoseEditorViewportToolBar, SharedThis(this))
-		.Cursor(EMouseCursor::Default);
-}
-
-void SPoseEditorViewport::BindCommands()
-{
-	SEditorViewport::BindCommands();
-}
-
+*/
 } // namespace Skelly

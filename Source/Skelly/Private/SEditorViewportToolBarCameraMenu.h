@@ -21,48 +21,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-------------------------------------------------------------------------------
+#pragma once
 
-#include "SkellyPrivatePCH.h"
-#include "SSkellyPoseEditorViewport.h"
-#include "SkellyPoseEditorViewportClient.h"
-#include "SkellyPoseEditor.h"
-#include "SSkellyPoseEditorViewportToolBar.h"
+#include "SEditorViewportToolBarMenu.h"
+
+class SViewportToolBar;
+class SEditorViewport;
 
 namespace Skelly {
 
-void SPoseEditorViewport::Construct(const FArguments& InArgs, TSharedPtr<FPoseEditor> inPoseEditor)
+class SEditorViewportToolBarCameraMenu : public SEditorViewportToolbarMenu
 {
-	_poseEditorWeakPtr = inPoseEditor;
+public:
+	SLATE_BEGIN_ARGS(SEditorViewportToolBarCameraMenu) {}
+		/** The toolbar the menu is attached to. */
+		SLATE_ARGUMENT(TSharedPtr<SViewportToolBar>, ParentToolBar)
+	SLATE_END_ARGS()
 
-	SEditorViewport::Construct(SEditorViewport::FArguments());
-}
+	void Construct(const FArguments& inArgs, TSharedPtr<SEditorViewport> inViewport);
 
-TSharedRef<FEditorViewportClient> SPoseEditorViewport::MakeEditorViewportClient()
-{
-	TSharedPtr<FPoseEditor> poseEditor = _poseEditorWeakPtr.Pin();
-	_poseEditorViewportClient = MakeShareable(
-		new FPoseEditorViewportClient(
-			poseEditor.IsValid() ? &poseEditor->GetPreviewScene() : nullptr
-		)
-	);
+private:
+	FText GetMenuLabel() const;
+	const FSlateBrush* GetMenuLabelIcon() const;
+	TSharedRef<SWidget> GenerateMenuContent() const;
 
-	_poseEditorViewportClient->ViewportType = LVT_Perspective;
-	_poseEditorViewportClient->bSetListenerPosition = false;
-	_poseEditorViewportClient->SetViewLocation(EditorViewportDefs::DefaultPerspectiveViewLocation);
-	_poseEditorViewportClient->SetViewRotation(EditorViewportDefs::DefaultPerspectiveViewRotation);
-
-	return _poseEditorViewportClient.ToSharedRef();
-}
-
-TSharedPtr<SWidget> SPoseEditorViewport::MakeViewportToolbar()
-{
-	return SNew(SPoseEditorViewportToolBar, SharedThis(this))
-		.Cursor(EMouseCursor::Default);
-}
-
-void SPoseEditorViewport::BindCommands()
-{
-	SEditorViewport::BindCommands();
-}
+private:
+	TWeakPtr<SEditorViewport> _viewportWeakPtr;
+};
 
 } // namespace Skelly
