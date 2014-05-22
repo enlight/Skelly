@@ -41,6 +41,10 @@ public: // FEditorViewportClient interface
 	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
 
 private:
+	void UpdatePreviewSceneSetup();
+	void FocusViewportOnPreviewComponent();
+
+private:
 	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
 };
 

@@ -53,6 +53,9 @@ void FPoseEditorViewportClient::SetSkeletalMeshPreviewComponent(
 	inPreviewComponent->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
 	inPreviewComponent->bCanHighlightSelectedSections = true;
 	_skeletalMeshPreviewComponent = inPreviewComponent;
+
+	UpdatePreviewSceneSetup();
+	FocusViewportOnPreviewComponent();
 }
 
 void FPoseEditorViewportClient::Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI)
@@ -61,6 +64,24 @@ void FPoseEditorViewportClient::Draw(const FSceneView* inView, FPrimitiveDrawInt
 
 	// TODO: the skeletal mesh is already drawn as part of the preview scene,
 	//       but any additional bits and pieces should be drawn here
+}
+
+void FPoseEditorViewportClient::UpdatePreviewSceneSetup()
+{
+	if (_skeletalMeshPreviewComponent.IsValid() && _skeletalMeshPreviewComponent->SkeletalMesh)
+	{
+		// TODO: move the floor to the bottom of the mesh's bounding box
+	}
+}
+
+void FPoseEditorViewportClient::FocusViewportOnPreviewComponent()
+{
+	if (_skeletalMeshPreviewComponent.IsValid())
+	{
+		auto bounds = _skeletalMeshPreviewComponent->CalcBounds(FTransform::Identity);
+		FocusViewportOnBox(bounds.GetBox(), true);
+		FEditorViewportClient::Invalidate();
+	}
 }
 
 } // namespace Skelly
