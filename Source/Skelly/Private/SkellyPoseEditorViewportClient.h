@@ -38,6 +38,7 @@ public:
 	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
 
 public: // FEditorViewportClient interface
+	virtual void Tick(float inDeltaSeconds);
 	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
 
 private:

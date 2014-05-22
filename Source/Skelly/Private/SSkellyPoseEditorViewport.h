@@ -44,6 +44,10 @@ protected: // SEditorViewport interface
 	virtual void BindCommands() override;
 
 private:
+	// returns true when the viewport is visible
+	bool IsVisible() const;
+
+private:
 	TWeakPtr<FPoseEditor> _poseEditorWeakPtr;
 	TSharedPtr<FPoseEditorViewportClient> _poseEditorViewportClient;
 };

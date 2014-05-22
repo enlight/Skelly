@@ -50,6 +50,11 @@ TSharedRef<FEditorViewportClient> SPoseEditorViewport::MakeEditorViewportClient(
 	_poseEditorViewportClient->bSetListenerPosition = false;
 	_poseEditorViewportClient->SetViewLocation(EditorViewportDefs::DefaultPerspectiveViewLocation);
 	_poseEditorViewportClient->SetViewRotation(EditorViewportDefs::DefaultPerspectiveViewRotation);
+	// if the visibility delegate isn't bound the editor will assume the viewport isn't visible 
+	// and will not tick the viewport client, which means that the viewport will not respond to 
+	// most input, and you'll be sitting there wondering why the hell you can't do anything other
+	// than zoom with the mouse scroll-wheel... true story
+	_poseEditorViewportClient->VisibilityDelegate.BindSP(this, &SPoseEditorViewport::IsVisible);
 
 	return _poseEditorViewportClient.ToSharedRef();
 }
@@ -63,6 +68,13 @@ TSharedPtr<SWidget> SPoseEditorViewport::MakeViewportToolbar()
 void SPoseEditorViewport::BindCommands()
 {
 	SEditorViewport::BindCommands();
+}
+
+bool SPoseEditorViewport::IsVisible() const
+{
+	// TODO: not the best solution perhaps, because this won't let the editor optimize the viewport
+	//       client ticking
+	return true;
 }
 
 } // namespace Skelly

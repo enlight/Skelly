@@ -25,6 +25,7 @@
 
 #include "SkellyPrivatePCH.h"
 #include "SkellyPoseEditorViewportClient.h"
+#include "PreviewScene.h"
 
 namespace Skelly {
 
@@ -56,6 +57,16 @@ void FPoseEditorViewportClient::SetSkeletalMeshPreviewComponent(
 
 	UpdatePreviewSceneSetup();
 	FocusViewportOnPreviewComponent();
+}
+
+void FPoseEditorViewportClient::Tick(float inDeltaSeconds)
+{
+	FEditorViewportClient::Tick(inDeltaSeconds);
+
+	if (!GIntraFrameDebuggingGameThread)
+	{
+		PreviewScene->GetWorld()->Tick(LEVELTICK_All, inDeltaSeconds);
+	}
 }
 
 void FPoseEditorViewportClient::Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI)
