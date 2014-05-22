@@ -26,6 +26,7 @@
 #include "EditorViewportClient.h"
 
 class FPreviewScene;
+class UDebugSkelMeshComponent;
 
 namespace Skelly {
 
@@ -33,6 +34,14 @@ class FPoseEditorViewportClient : public FEditorViewportClient
 {
 public:
 	FPoseEditorViewportClient(FPreviewScene* inPreviewScene = nullptr);
+
+	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
+
+public: // FEditorViewportClient interface
+	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
+
+private:
+	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
 };
 
 } // namespace Skelly

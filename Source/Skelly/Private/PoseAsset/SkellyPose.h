@@ -33,6 +33,7 @@ class USkellyPose : public UObject
 
 public:
 	void SetSkeleton(USkeleton* inSkeleton);
+	USkeleton* GetSkeleton();
 
 private:
 	/** Pose in Bone Space */
@@ -48,3 +49,8 @@ private:
 	//       probably something that should be handled for poses too. Will probably deal with this
 	//       when implementing skeleton replacement for poses.
 };
+
+inline USkeleton* USkellyPose::GetSkeleton()
+{
+	return Skeleton;
+}

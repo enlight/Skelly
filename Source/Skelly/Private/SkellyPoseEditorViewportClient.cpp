@@ -31,7 +31,36 @@ namespace Skelly {
 FPoseEditorViewportClient::FPoseEditorViewportClient(FPreviewScene* inPreviewScene)
 	: FEditorViewportClient(inPreviewScene)
 {
-	
+	EngineShowFlags.Game = 0;
+	EngineShowFlags.SetSnap(false);
+	EngineShowFlags.DisableAdvancedFeatures();
+	EngineShowFlags.CompositeEditorPrimitives = true;
+
+	SetRealtime(true);
+	if (GEditor->PlayWorld)
+	{
+		// disable real-time mode when playing in the editor
+		SetRealtime(false, true);
+	}
+
+	// TODO: create floor, sky, fog, light, reflections
+}
+
+void FPoseEditorViewportClient::SetSkeletalMeshPreviewComponent(
+	UDebugSkelMeshComponent* inPreviewComponent
+)
+{
+	inPreviewComponent->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
+	inPreviewComponent->bCanHighlightSelectedSections = true;
+	_skeletalMeshPreviewComponent = inPreviewComponent;
+}
+
+void FPoseEditorViewportClient::Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI)
+{
+	FEditorViewportClient::Draw(inView, inPDI);
+
+	// TODO: the skeletal mesh is already drawn as part of the preview scene,
+	//       but any additional bits and pieces should be drawn here
 }
 
 } // namespace Skelly

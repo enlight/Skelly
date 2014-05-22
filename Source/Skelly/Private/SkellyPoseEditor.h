@@ -27,6 +27,8 @@
 #include "PreviewScene.h"
 
 class USkellyPose;
+class USkeletalMesh;
+class UDebugSkelMeshComponent;
 
 namespace Skelly {
 
@@ -47,6 +49,7 @@ public: // FGCObject interface
 
 public:
 	FPoseEditor();
+	~FPoseEditor();
 
 	void InitPoseEditor(
 		EToolkitMode::Type toolkitMode, TSharedPtr<IToolkitHost>& editWithinLevelEditor,
@@ -60,18 +63,24 @@ private:
 	TSharedRef<SDockTab> OnSpawnViewportTab(const FSpawnTabArgs& args);
 	TSharedRef<SDockTab> OnSpawnDetailsTab(const FSpawnTabArgs& args);
 
+	void SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh);
+
 private:
-	/** The pose currently being edited. */
+	// the pose currently being edited
 	USkellyPose* _currentPose;
 
 	FText _skeletonTabTitle;
 	FText _viewportTabTitle;
 	FText _detailsTabTitle;
 
-	/** The scene to be displayed in the viewport. */
+	// the scene to be displayed in the viewport
 	FPreviewScene _previewScene;
 
+	// the viewport that displays the preview scene
 	TSharedPtr<class SPoseEditorViewport> _viewport;
+
+	// the component that will draw the current pose
+	UDebugSkelMeshComponent* _skeletalMeshPreviewComponent;
 
 private:
 	static FName PoseEditorAppName;

@@ -27,6 +27,7 @@
 #include "WorkspaceMenuStructureModule.h"
 #include "PoseAsset/SkellyPose.h"
 #include "SSkellyPoseEditorViewport.h"
+#include "SkellyPoseEditorViewportClient.h"
 
 #define LOCTEXT_NAMESPACE "Skelly.PoseEditor"
 
@@ -102,10 +103,19 @@ void FPoseEditor::AddReferencedObjects(FReferenceCollector& collector)
 
 FPoseEditor::FPoseEditor()
 	: _currentPose(nullptr)
+	, _skeletalMeshPreviewComponent(nullptr)
 	, _skeletonTabTitle(LOCTEXT("SkeletonTab", "Skeleton"))
 	, _viewportTabTitle(LOCTEXT("ViewportTab", "Viewport"))
 	, _detailsTabTitle(LOCTEXT("DetailsTab", "Details"))
 {
+}
+
+FPoseEditor::~FPoseEditor()
+{
+	if (_skeletalMeshPreviewComponent)
+	{
+		_skeletalMeshPreviewComponent->RemoveFromRoot();
+	}
 }
 
 void FPoseEditor::InitPoseEditor(
@@ -113,6 +123,8 @@ void FPoseEditor::InitPoseEditor(
 	USkellyPose* poseToEdit
 )
 {
+	check(poseToEdit);
+
 	_currentPose = poseToEdit;
 	_viewport = SNew(SPoseEditorViewport, SharedThis(this));
 
@@ -160,6 +172,22 @@ void FPoseEditor::InitPoseEditor(
 		toolkitMode, editWithinLevelEditor, PoseEditorAppName, defaultStandaloneLayout, true, true, 
 		poseToEdit
 	);
+
+	check(!_skeletalMeshPreviewComponent);
+
+	_skeletalMeshPreviewComponent = NewObject<UDebugSkelMeshComponent>();
+	// ensure the preview component is kept alive until the editor is destroyed
+	_skeletalMeshPreviewComponent->AddToRoot();
+
+	if (poseToEdit && poseToEdit->GetSkeleton())
+	{
+		// find a suitable mesh for this skeleton (don't really care which)
+		auto previewMesh = poseToEdit->GetSkeleton()->GetPreviewMesh(true);
+		if (previewMesh)
+		{
+			SetPreviewSkeletalMesh(previewMesh);
+		}
+	}
 }
 
 TSharedRef<SDockTab> FPoseEditor::OnSpawnSkeletonTab(const FSpawnTabArgs& args)
@@ -181,6 +209,49 @@ TSharedRef<SDockTab> FPoseEditor::OnSpawnDetailsTab(const FSpawnTabArgs& args)
 {
 	return SNew(SDockTab)
 		.Label(_detailsTabTitle);
+}
+
+void FPoseEditor::SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh)
+{
+	check(_currentPose);
+	check(inPreviewSkeletalMesh);
+
+	if (_currentPose->GetSkeleton()->IsCompatibleMesh(inPreviewSkeletalMesh))
+	{
+		if (inPreviewSkeletalMesh != _skeletalMeshPreviewComponent->SkeletalMesh)
+		{
+			// FAssetEditorToolkit::GetToolkitName() will need to be overriden if there is more
+			// than one object being edited (the pose is one of those, skeletal mesh is the other).
+			// For now the pose editor doesn't deal with sockets, so no editing of the skeletal
+			// mesh should be happening anyway.
+			/*
+			if (_skeletalMeshPreviewComponent->SkeletalMesh)
+			{
+				RemoveEditingObject(_skeletalMeshPreviewComponent->SkeletalMesh);
+			}
+			if (inPreviewSkeletalMesh)
+			{
+				AddEditingObject(inPreviewSkeletalMesh);
+			}
+			*/
+			_skeletalMeshPreviewComponent->SetSkeletalMesh(inPreviewSkeletalMesh);
+
+			_previewScene.AddComponent(_skeletalMeshPreviewComponent, FTransform::Identity);
+
+			auto viewportClient = StaticCastSharedRef<FPoseEditorViewportClient>(
+				_viewport->GetViewportClient().ToSharedRef()
+			);
+			viewportClient->SetSkeletalMeshPreviewComponent(_skeletalMeshPreviewComponent);
+		}
+		else
+		{
+			_skeletalMeshPreviewComponent->InitAnim(true);
+		}
+	}
+	else // mesh is incompatible with the current pose
+	{
+		// TODO: notify the user the mesh is incompatible
+	}
 }
 
 } // namespace Skelly
