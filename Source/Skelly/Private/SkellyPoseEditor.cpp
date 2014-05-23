@@ -28,6 +28,7 @@
 #include "PoseAsset/SkellyPose.h"
 #include "SSkellyPoseEditorViewport.h"
 #include "SkellyPoseEditorViewportClient.h"
+#include "SkellyPoseEditorViewportCommands.h"
 
 #define LOCTEXT_NAMESPACE "Skelly.PoseEditor"
 
@@ -116,6 +117,16 @@ FPoseEditor::~FPoseEditor()
 	{
 		_skeletalMeshPreviewComponent->RemoveFromRoot();
 	}
+}
+
+void FPoseEditor::Startup()
+{
+	FPoseEditorViewportCommands::Register();
+}
+
+void FPoseEditor::Shutdown()
+{
+	FPoseEditorViewportCommands::Unregister();
 }
 
 void FPoseEditor::InitPoseEditor(

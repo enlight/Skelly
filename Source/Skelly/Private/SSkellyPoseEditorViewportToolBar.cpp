@@ -28,6 +28,7 @@
 #include "EditorViewportCommands.h"
 #include "SEditorViewportCameraMenu.h"
 #include "SEditorViewportViewMenu.h"
+#include "SSkellyPoseEditorViewportShowMenu.h"
 #include "STransformViewportToolbar.h"
 
 namespace Skelly {
@@ -67,6 +68,12 @@ void SPoseEditorViewportToolBar::Construct(
 			.Padding(menuPadding)
 			[
 				SNew(SEditorViewportViewMenu, inViewport.ToSharedRef(), SharedThis(this))
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(menuPadding)
+			[
+				SNew(SPoseEditorViewportShowMenu, inViewport.ToSharedRef(), SharedThis(this))
 			]
 			+ SHorizontalBox::Slot()
 			.Padding(menuPadding)

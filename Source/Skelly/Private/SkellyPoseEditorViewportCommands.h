@@ -23,47 +23,34 @@
 //-------------------------------------------------------------------------------
 #pragma once
 
-#include "EditorViewportClient.h"
-
-class FPreviewScene;
-class UDebugSkelMeshComponent;
-class FSceneView;
-class HHitProxy;
+#include "Commands.h"
 
 namespace Skelly {
 
-class FPoseEditorViewportClient : public FEditorViewportClient
+/** 
+ * Stores information about commands available in the pose editor viewport.
+ * 
+ * The commands are actually implemented in Skelly::FPoseEditorViewportClient,
+ * and bound to the viewport toolbar in SSkellyViewport.
+ */
+class FPoseEditorViewportCommands : public TCommands<FPoseEditorViewportCommands>
 {
 public:
-	FPoseEditorViewportClient(FPreviewScene* inPreviewScene = nullptr);
+	FPoseEditorViewportCommands()
+		: TCommands<FPoseEditorViewportCommands>(
+			TEXT("SkellyPoseEditorCmds"),
+			NSLOCTEXT("Contexts", "SkellyPoseEditorCmds", "Skelly Pose Editor Viewport Commands"),
+			NAME_None,
+			FEditorStyle::GetStyleSetName()
+		)
+	{
+	}
 
-	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
+	// show/hide skeletal mesh bones
+	TSharedPtr<FUICommandInfo> ShowBones;
 
-public: // FEditorViewportClient interface
-	virtual void Tick(float inDeltaSeconds);
-	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
-	virtual void ProcessClick(
-		FSceneView& inView, HHitProxy* inHitProxy, FKey inKey, EInputEvent inEvent, 
-		uint32 inHitX, uint32 inHitY
-	) override;
-
-public: // event handlers for the viewport toolbar (bound by the viewport)
-	void OnShowBones();
-	bool IsShowingBones() const;
-
-private:
-	void ComputeBoneWorldTransformAndColor(
-		TArray<FTransform>& outWorldTransforms, TArray<FLinearColor>& outColors
-	) const;
-	void DrawBones(
-		FPrimitiveDrawInterface* inPDI, const TArray<FTransform>& inWorldTransforms, 
-		const TArray<FLinearColor>& inColors
-	);
-	void UpdatePreviewSceneSetup();
-	void FocusViewportOnPreviewComponent();
-
-private:
-	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
+public: // TCommands<> interface
+	virtual void RegisterCommands() override;
 };
 
 } // namespace Skelly

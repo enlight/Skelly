@@ -27,6 +27,7 @@
 #include "SkellyPoseEditorViewportClient.h"
 #include "SkellyPoseEditor.h"
 #include "SSkellyPoseEditorViewportToolBar.h"
+#include "SkellyPoseEditorViewportCommands.h"
 
 namespace Skelly {
 
@@ -68,6 +69,17 @@ TSharedPtr<SWidget> SPoseEditorViewport::MakeViewportToolbar()
 void SPoseEditorViewport::BindCommands()
 {
 	SEditorViewport::BindCommands();
+
+	const auto& commands = FPoseEditorViewportCommands::Get();
+	auto commandList = CommandList.Get();
+	TSharedRef<FPoseEditorViewportClient> viewportClient = _poseEditorViewportClient.ToSharedRef();
+
+	commandList->MapAction(
+		commands.ShowBones,
+		FExecuteAction::CreateSP(viewportClient, &FPoseEditorViewportClient::OnShowBones),
+		FCanExecuteAction(),
+		FIsActionChecked::CreateSP(viewportClient, &FPoseEditorViewportClient::IsShowingBones)
+	);
 }
 
 bool SPoseEditorViewport::IsVisible() const

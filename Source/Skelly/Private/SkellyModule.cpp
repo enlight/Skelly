@@ -52,6 +52,8 @@ private:
 
 void FModule::StartupModule()
 {
+	FPoseEditor::Startup();
+
 	IAssetTools& assetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 	assetTools.RegisterAssetTypeActions(MakeShareable(new FPoseAssetTypeActions));
 }
@@ -69,6 +71,8 @@ void FModule::ShutdownModule()
 		}
 	}
 	_registeredAssetTypes.Empty();
+
+	FPoseEditor::Shutdown();
 }
 
 TSharedRef<FPoseEditor> FModule::CreatePoseEditor(

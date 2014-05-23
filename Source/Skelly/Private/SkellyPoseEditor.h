@@ -50,6 +50,10 @@ public: // FGCObject interface
 public:
 	FPoseEditor();
 	~FPoseEditor();
+	/** Called on module startup. Initialize state shared by all pose editor instances. */
+	static void Startup();
+	/** Called on module shutdown. Cleanup state shared by all pose editor instances. */
+	static void Shutdown();
 
 	void InitPoseEditor(
 		EToolkitMode::Type toolkitMode, TSharedPtr<IToolkitHost>& editWithinLevelEditor,

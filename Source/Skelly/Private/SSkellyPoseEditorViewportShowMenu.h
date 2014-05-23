@@ -23,47 +23,35 @@
 //-------------------------------------------------------------------------------
 #pragma once
 
-#include "EditorViewportClient.h"
+#include "SEditorViewportToolBarMenu.h"
 
-class FPreviewScene;
-class UDebugSkelMeshComponent;
-class FSceneView;
-class HHitProxy;
+class SViewportToolBar;
+class SEditorViewport;
 
 namespace Skelly {
 
-class FPoseEditorViewportClient : public FEditorViewportClient
+/** Pose editor viewport menu for toggling various skeletal mesh visualizations. */
+class SPoseEditorViewportShowMenu : public SEditorViewportToolbarMenu
 {
 public:
-	FPoseEditorViewportClient(FPreviewScene* inPreviewScene = nullptr);
+	SLATE_BEGIN_ARGS(SPoseEditorViewportShowMenu) {}
+	SLATE_END_ARGS()
 
-	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
-
-public: // FEditorViewportClient interface
-	virtual void Tick(float inDeltaSeconds);
-	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
-	virtual void ProcessClick(
-		FSceneView& inView, HHitProxy* inHitProxy, FKey inKey, EInputEvent inEvent, 
-		uint32 inHitX, uint32 inHitY
-	) override;
-
-public: // event handlers for the viewport toolbar (bound by the viewport)
-	void OnShowBones();
-	bool IsShowingBones() const;
-
-private:
-	void ComputeBoneWorldTransformAndColor(
-		TArray<FTransform>& outWorldTransforms, TArray<FLinearColor>& outColors
-	) const;
-	void DrawBones(
-		FPrimitiveDrawInterface* inPDI, const TArray<FTransform>& inWorldTransforms, 
-		const TArray<FLinearColor>& inColors
+	/**
+	 * Construct the menu.
+	 * @param inViewport The viewport within which the menu will be displayed.
+	 * @param inParentToolBar The toolbar the menu will be contained in.
+	 */
+	void Construct(
+		const FArguments& inArgs, TSharedRef<SEditorViewport> inViewport, 
+		TSharedRef<SViewportToolBar> inParentToolBar
 	);
-	void UpdatePreviewSceneSetup();
-	void FocusViewportOnPreviewComponent();
 
 private:
-	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
+	TSharedRef<SWidget> GenerateMenuContent() const;
+
+private:
+	TWeakPtr<SEditorViewport> _viewportWeakPtr;
 };
 
 } // namespace Skelly

@@ -21,49 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-------------------------------------------------------------------------------
-#pragma once
 
-#include "EditorViewportClient.h"
-
-class FPreviewScene;
-class UDebugSkelMeshComponent;
-class FSceneView;
-class HHitProxy;
+#include "SkellyPrivatePCH.h"
+#include "SkellyPoseEditorViewportCommands.h"
 
 namespace Skelly {
 
-class FPoseEditorViewportClient : public FEditorViewportClient
+void FPoseEditorViewportCommands::RegisterCommands()
 {
-public:
-	FPoseEditorViewportClient(FPreviewScene* inPreviewScene = nullptr);
-
-	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
-
-public: // FEditorViewportClient interface
-	virtual void Tick(float inDeltaSeconds);
-	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
-	virtual void ProcessClick(
-		FSceneView& inView, HHitProxy* inHitProxy, FKey inKey, EInputEvent inEvent, 
-		uint32 inHitX, uint32 inHitY
-	) override;
-
-public: // event handlers for the viewport toolbar (bound by the viewport)
-	void OnShowBones();
-	bool IsShowingBones() const;
-
-private:
-	void ComputeBoneWorldTransformAndColor(
-		TArray<FTransform>& outWorldTransforms, TArray<FLinearColor>& outColors
-	) const;
-	void DrawBones(
-		FPrimitiveDrawInterface* inPDI, const TArray<FTransform>& inWorldTransforms, 
-		const TArray<FLinearColor>& inColors
+	UI_COMMAND(
+		ShowBones, "Bones", "Display bones in viewport", 
+		EUserInterfaceActionType::ToggleButton, FInputGesture()
 	);
-	void UpdatePreviewSceneSetup();
-	void FocusViewportOnPreviewComponent();
-
-private:
-	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
-};
+}
 
 } // namespace Skelly

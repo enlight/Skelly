@@ -21,49 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-------------------------------------------------------------------------------
-#pragma once
 
-#include "EditorViewportClient.h"
+#include "SkellyPrivatePCH.h"
+#include "SSkellyPoseEditorViewportShowMenu.h"
+#include "SkellyPoseEditorViewportCommands.h"
+#include "SEditorViewport.h"
 
-class FPreviewScene;
-class UDebugSkelMeshComponent;
-class FSceneView;
-class HHitProxy;
+#define LOCTEXT_NAMESPACE "PoseEditorViewport"
 
 namespace Skelly {
 
-class FPoseEditorViewportClient : public FEditorViewportClient
+void SPoseEditorViewportShowMenu::Construct(
+	const FArguments& inArgs, TSharedRef<SEditorViewport> inViewport,
+	TSharedRef<SViewportToolBar> inParentToolBar
+)
 {
-public:
-	FPoseEditorViewportClient(FPreviewScene* inPreviewScene = nullptr);
-
-	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
-
-public: // FEditorViewportClient interface
-	virtual void Tick(float inDeltaSeconds);
-	virtual void Draw(const FSceneView* inView, FPrimitiveDrawInterface* inPDI) override;
-	virtual void ProcessClick(
-		FSceneView& inView, HHitProxy* inHitProxy, FKey inKey, EInputEvent inEvent, 
-		uint32 inHitX, uint32 inHitY
-	) override;
-
-public: // event handlers for the viewport toolbar (bound by the viewport)
-	void OnShowBones();
-	bool IsShowingBones() const;
-
-private:
-	void ComputeBoneWorldTransformAndColor(
-		TArray<FTransform>& outWorldTransforms, TArray<FLinearColor>& outColors
-	) const;
-	void DrawBones(
-		FPrimitiveDrawInterface* inPDI, const TArray<FTransform>& inWorldTransforms, 
-		const TArray<FLinearColor>& inColors
+	_viewportWeakPtr = inViewport;
+	
+	SEditorViewportToolbarMenu::Construct(
+		SEditorViewportToolbarMenu::FArguments()
+		.ParentToolBar(inParentToolBar)
+		.Cursor(EMouseCursor::Default)
+		.Label(LOCTEXT("ShowMenuTitle", "Show"))
+		.OnGetMenuContent(this, &SPoseEditorViewportShowMenu::GenerateMenuContent)
 	);
-	void UpdatePreviewSceneSetup();
-	void FocusViewportOnPreviewComponent();
+}
 
-private:
-	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
-};
+TSharedRef<SWidget> SPoseEditorViewportShowMenu::GenerateMenuContent() const
+{
+	const bool bInShouldCloseWindowAfterMenuSelection = true;
+	TSharedPtr<SEditorViewport> viewportPtr(_viewportWeakPtr.Pin());
+	FMenuBuilder menuBuilder(
+		bInShouldCloseWindowAfterMenuSelection,
+		viewportPtr.IsValid() ? viewportPtr->GetCommandList() : nullptr
+	);
+
+	const auto& commands = FPoseEditorViewportCommands::Get();
+	if (viewportPtr.IsValid())
+	{
+		menuBuilder.AddMenuEntry(commands.ShowBones);
+	}
+
+	return menuBuilder.MakeWidget();
+}
 
 } // namespace Skelly
+
+#undef LOCTEXT_NAMESPACE
