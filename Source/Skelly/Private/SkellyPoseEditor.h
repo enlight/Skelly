@@ -86,6 +86,9 @@ private:
 	// the component that will draw the current pose
 	UDebugSkelMeshComponent* _skeletalMeshPreviewComponent;
 
+	// the skeleton tree displayed on the skeleton tab
+	TSharedPtr<class SSkeletonTree> _skeletonTree;
+
 private:
 	static FName PoseEditorAppName;
 };

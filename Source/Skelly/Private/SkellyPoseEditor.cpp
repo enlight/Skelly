@@ -29,6 +29,7 @@
 #include "SSkellyPoseEditorViewport.h"
 #include "SkellyPoseEditorViewportClient.h"
 #include "SkellyPoseEditorViewportCommands.h"
+#include "SSkellySkeletonTree.h"
 
 #define LOCTEXT_NAMESPACE "Skelly.PoseEditor"
 
@@ -138,6 +139,7 @@ void FPoseEditor::InitPoseEditor(
 
 	_currentPose = poseToEdit;
 	_viewport = SNew(SPoseEditorViewport, SharedThis(this));
+	_skeletonTree = SNew(SSkeletonTree);
 
 	TSharedRef<FTabManager::FLayout> defaultStandaloneLayout = 
 		FTabManager::NewLayout("Standalone_SkellyPoseEditor_Layout")
@@ -192,6 +194,8 @@ void FPoseEditor::InitPoseEditor(
 
 	if (poseToEdit && poseToEdit->GetSkeleton())
 	{
+		_skeletonTree->Populate(poseToEdit->GetSkeleton()->GetReferenceSkeleton());
+
 		// find a suitable mesh for this skeleton (don't really care which)
 		auto previewMesh = poseToEdit->GetSkeleton()->GetPreviewMesh(true);
 		if (previewMesh)
@@ -204,7 +208,10 @@ void FPoseEditor::InitPoseEditor(
 TSharedRef<SDockTab> FPoseEditor::OnSpawnSkeletonTab(const FSpawnTabArgs& args)
 {
 	return SNew(SDockTab)
-		.Label(_skeletonTabTitle);
+		.Label(_skeletonTabTitle)
+		[
+			_skeletonTree.ToSharedRef()
+		];
 }
 
 TSharedRef<SDockTab> FPoseEditor::OnSpawnViewportTab(const FSpawnTabArgs& args)
