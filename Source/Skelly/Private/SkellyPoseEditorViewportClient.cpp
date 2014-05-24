@@ -109,12 +109,12 @@ void FPoseEditorViewportClient::ProcessClick(
 		if (inHitProxy->IsA(HSkellyBoneProxy::StaticGetType()))
 		{
 			auto boneProxy = static_cast<HSkellyBoneProxy*>(inHitProxy);
-			// TODO: invoke some sort of OnBoneSelected delegate
+			SelectBone(boneProxy->BoneName);
 		}
 	}
 	else // user didn't click on anything selectable
 	{
-		// TODO: invoke some sort of OnClearSelection delegate
+		ClearSelection();
 	}
 }
 
@@ -135,6 +135,31 @@ void FPoseEditorViewportClient::OnShowBones()
 bool FPoseEditorViewportClient::IsShowingBones() const
 {
 	return _skeletalMeshPreviewComponent.IsValid() && _skeletalMeshPreviewComponent->bDisplayBones;
+}
+
+void FPoseEditorViewportClient::SelectBone(const FName& inBoneName)
+{
+	if (_skeletalMeshPreviewComponent.IsValid())
+	{
+		_skeletalMeshPreviewComponent->BonesOfInterest.Empty();
+		
+		const auto boneIndex = 
+			_skeletalMeshPreviewComponent->SkeletalMesh->Skeleton->GetReferenceSkeleton()
+			.FindBoneIndex(inBoneName);
+
+		if (boneIndex != INDEX_NONE)
+		{
+			_skeletalMeshPreviewComponent->BonesOfInterest.Add(boneIndex);
+		}
+	}
+}
+
+void FPoseEditorViewportClient::ClearSelection()
+{
+	if (_skeletalMeshPreviewComponent.IsValid())
+	{
+		_skeletalMeshPreviewComponent->BonesOfInterest.Empty();
+	}
 }
 
 void FPoseEditorViewportClient::ComputeBoneWorldTransformAndColor(

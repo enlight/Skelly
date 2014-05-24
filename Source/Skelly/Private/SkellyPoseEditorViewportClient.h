@@ -51,6 +51,10 @@ public: // event handlers for the viewport toolbar (bound by the viewport)
 	void OnShowBones();
 	bool IsShowingBones() const;
 
+public:
+	void SelectBone(const FName& inBoneName);
+	void ClearSelection();
+
 private:
 	void ComputeBoneWorldTransformAndColor(
 		TArray<FTransform>& outWorldTransforms, TArray<FLinearColor>& outColors
