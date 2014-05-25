@@ -139,10 +139,45 @@ void FPoseEditor::InitPoseEditor(
 
 	_currentPose = poseToEdit;
 	_viewport = SNew(SPoseEditorViewport, SharedThis(this));
-	_skeletonTree = SNew(SSkeletonTree);
+	_viewportClientWeakPtr = 
+		StaticCastSharedPtr<FPoseEditorViewportClient>(_viewport->GetViewportClient());
 
-	TSharedRef<FTabManager::FLayout> defaultStandaloneLayout = 
-		FTabManager::NewLayout("Standalone_SkellyPoseEditor_Layout")
+	auto viewportClient = _viewportClientWeakPtr.Pin();
+	if (viewportClient.IsValid())
+	{
+		viewportClient->OnSelectionChanged.BindSP(this, &FPoseEditor::Viewport_OnSelectionChanged);
+	}
+	
+	FAssetEditorToolkit::InitAssetEditor(
+		toolkitMode, editWithinLevelEditor, PoseEditorAppName, GenerateDefaultStandaloneLayout(),
+		true, true, poseToEdit
+	);
+
+	check(!_skeletalMeshPreviewComponent);
+
+	_skeletalMeshPreviewComponent = NewObject<UDebugSkelMeshComponent>();
+	// ensure the preview component is kept alive until this editor is destroyed
+	_skeletalMeshPreviewComponent->AddToRoot();
+
+	if (poseToEdit && poseToEdit->GetSkeleton())
+	{
+		if (_skeletonTree.IsValid())
+		{
+			_skeletonTree->Populate(poseToEdit->GetSkeleton()->GetReferenceSkeleton());
+		}
+
+		// find a suitable mesh for this skeleton (don't really care which)
+		auto previewMesh = poseToEdit->GetSkeleton()->GetPreviewMesh(true);
+		if (previewMesh)
+		{
+			SetPreviewSkeletalMesh(previewMesh);
+		}
+	}
+}
+
+TSharedRef<FTabManager::FLayout> FPoseEditor::GenerateDefaultStandaloneLayout()
+{
+	return FTabManager::NewLayout("Standalone_SkellyPoseEditor_Layout")
 		->AddArea
 		(
 			FTabManager::NewPrimaryArea()
@@ -180,29 +215,6 @@ void FPoseEditor::InitPoseEditor(
 				)
 			)
 		);
-
-	FAssetEditorToolkit::InitAssetEditor(
-		toolkitMode, editWithinLevelEditor, PoseEditorAppName, defaultStandaloneLayout, true, true, 
-		poseToEdit
-	);
-
-	check(!_skeletalMeshPreviewComponent);
-
-	_skeletalMeshPreviewComponent = NewObject<UDebugSkelMeshComponent>();
-	// ensure the preview component is kept alive until the editor is destroyed
-	_skeletalMeshPreviewComponent->AddToRoot();
-
-	if (poseToEdit && poseToEdit->GetSkeleton())
-	{
-		_skeletonTree->Populate(poseToEdit->GetSkeleton()->GetReferenceSkeleton());
-
-		// find a suitable mesh for this skeleton (don't really care which)
-		auto previewMesh = poseToEdit->GetSkeleton()->GetPreviewMesh(true);
-		if (previewMesh)
-		{
-			SetPreviewSkeletalMesh(previewMesh);
-		}
-	}
 }
 
 TSharedRef<SDockTab> FPoseEditor::OnSpawnSkeletonTab(const FSpawnTabArgs& args)
@@ -210,7 +222,8 @@ TSharedRef<SDockTab> FPoseEditor::OnSpawnSkeletonTab(const FSpawnTabArgs& args)
 	return SNew(SDockTab)
 		.Label(_skeletonTabTitle)
 		[
-			_skeletonTree.ToSharedRef()
+			SAssignNew(_skeletonTree, SSkeletonTree)
+			.OnSelectionChanged(this, &FPoseEditor::SkeletonTree_OnSelectionChanged)
 		];
 }
 
@@ -256,10 +269,14 @@ void FPoseEditor::SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh)
 
 			_previewScene.AddComponent(_skeletalMeshPreviewComponent, FTransform::Identity);
 
-			auto viewportClient = StaticCastSharedRef<FPoseEditorViewportClient>(
-				_viewport->GetViewportClient().ToSharedRef()
-			);
-			viewportClient->SetSkeletalMeshPreviewComponent(_skeletalMeshPreviewComponent);
+			auto viewportClient = _viewportClientWeakPtr.Pin();
+			if (viewportClient.IsValid())
+			{
+				viewportClient->SetSkeletalMeshPreviewComponent(
+					_skeletalMeshPreviewComponent
+				);
+			}
+			
 		}
 		else
 		{
@@ -269,6 +286,43 @@ void FPoseEditor::SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh)
 	else // mesh is incompatible with the current pose
 	{
 		// TODO: notify the user the mesh is incompatible
+	}
+}
+
+void FPoseEditor::SkeletonTree_OnSelectionChanged()
+{
+	if (_skeletalMeshPreviewComponent)
+	{
+		TArray<FName> boneNames;
+		_skeletonTree->GetSelectedBoneNames(boneNames);
+		// preallocate the array since the final size is already known
+		_skeletalMeshPreviewComponent->BonesOfInterest.Empty(boneNames.Num());
+		_skeletalMeshPreviewComponent->BonesOfInterest.AddUninitialized(boneNames.Num());
+
+		for (int32 i = 0; i < boneNames.Num(); ++i)
+		{
+			_skeletalMeshPreviewComponent->BonesOfInterest[i] =
+				_skeletalMeshPreviewComponent->GetBoneIndex(boneNames[i]);
+			
+			// force the viewport to redraw
+			if (_viewport.IsValid())
+			{
+				_viewport->Refresh();
+			}
+		}
+	}
+}
+
+void FPoseEditor::Viewport_OnSelectionChanged()
+{
+	if (_skeletalMeshPreviewComponent && _skeletonTree.IsValid())
+	{
+		TArray<FName> boneNames;
+		for (auto boneIndex : _skeletalMeshPreviewComponent->BonesOfInterest)
+		{
+			boneNames.Add(_skeletalMeshPreviewComponent->GetBoneName(boneIndex));
+		}
+		_skeletonTree->SetSelectedBoneNames(boneNames);
 	}
 }
 

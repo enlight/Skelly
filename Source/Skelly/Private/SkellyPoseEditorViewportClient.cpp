@@ -151,6 +151,8 @@ void FPoseEditorViewportClient::SelectBone(const FName& inBoneName)
 		{
 			_skeletalMeshPreviewComponent->BonesOfInterest.Add(boneIndex);
 		}
+
+		OnSelectionChanged.ExecuteIfBound();
 	}
 }
 
@@ -159,6 +161,8 @@ void FPoseEditorViewportClient::ClearSelection()
 	if (_skeletalMeshPreviewComponent.IsValid())
 	{
 		_skeletalMeshPreviewComponent->BonesOfInterest.Empty();
+
+		OnSelectionChanged.ExecuteIfBound();
 	}
 }
 

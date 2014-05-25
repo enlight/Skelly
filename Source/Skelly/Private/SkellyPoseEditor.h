@@ -63,11 +63,16 @@ public:
 	FPreviewScene& GetPreviewScene();
 
 private:
+	TSharedRef<FTabManager::FLayout> GenerateDefaultStandaloneLayout();
+	void SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh);
+
+private: // event handlers
 	TSharedRef<SDockTab> OnSpawnSkeletonTab(const FSpawnTabArgs& args);
 	TSharedRef<SDockTab> OnSpawnViewportTab(const FSpawnTabArgs& args);
 	TSharedRef<SDockTab> OnSpawnDetailsTab(const FSpawnTabArgs& args);
 
-	void SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh);
+	void SkeletonTree_OnSelectionChanged();
+	void Viewport_OnSelectionChanged();
 
 private:
 	// the pose currently being edited
@@ -82,6 +87,9 @@ private:
 
 	// the viewport that displays the preview scene
 	TSharedPtr<class SPoseEditorViewport> _viewport;
+
+	// the viewport's client, for convenience
+	TWeakPtr<class FPoseEditorViewportClient> _viewportClientWeakPtr;
 
 	// the component that will draw the current pose
 	UDebugSkelMeshComponent* _skeletalMeshPreviewComponent;

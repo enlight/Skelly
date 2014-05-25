@@ -35,6 +35,9 @@ namespace Skelly {
 class FPoseEditorViewportClient : public FEditorViewportClient
 {
 public:
+	DECLARE_DELEGATE(FOnSelectionChanged)
+
+public:
 	FPoseEditorViewportClient(FPreviewScene* inPreviewScene = nullptr);
 
 	void SetSkeletalMeshPreviewComponent(UDebugSkelMeshComponent* inPreviewComponent);
@@ -50,6 +53,10 @@ public: // FEditorViewportClient interface
 public: // event handlers for the viewport toolbar (bound by the viewport)
 	void OnShowBones();
 	bool IsShowingBones() const;
+
+public: // events
+	/** Invoked when the selection in the viewport changes. */
+	FOnSelectionChanged OnSelectionChanged;
 
 public:
 	void SelectBone(const FName& inBoneName);

@@ -38,6 +38,9 @@ public:
 
 	void Construct(const FArguments& inArgs, TSharedPtr<FPoseEditor> inPoseEditor);
 
+public:
+	void Refresh();
+
 protected: // SEditorViewport interface
 	virtual TSharedRef<FEditorViewportClient> MakeEditorViewportClient() override;
 	virtual TSharedPtr<SWidget> MakeViewportToolbar() override;

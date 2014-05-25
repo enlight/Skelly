@@ -34,14 +34,26 @@ typedef TWeakPtr<class FBoneTreeItem> FBoneTreeItemWeakPtr;
 class SSkeletonTree : public SCompoundWidget
 {
 public:
+	DECLARE_DELEGATE(FOnSelectionChanged)
+
+public:
 	SLATE_BEGIN_ARGS(SSkeletonTree) {}
+		SLATE_EVENT(FOnSelectionChanged, OnSelectionChanged)
 	SLATE_END_ARGS()
 
 public:
 	void Construct(const FArguments& inArgs);
 
-	// load all items get TreeView to redraw itself
+	/** Populate the tree view with bones from the given skeleton. */
 	void Populate(const FReferenceSkeleton& inReferenceSkeleton);
+	/** Get the names of all the bones currently selected in the tree view. */
+	void GetSelectedBoneNames(TArray<FName>& outBoneNames) const;
+	/** Set the bones that should be selected in the tree view. */
+	void SetSelectedBoneNames(const TArray<FName>& inBoneNames);
+
+protected:
+	/** Invoked when the selection in the tree view changes. */
+	FOnSelectionChanged OnSelectionChanged;
 
 private:
 	// called by TreeView to generate a table row for the given item
@@ -62,7 +74,10 @@ private:
 	TSharedPtr<SBoneTreeView> _treeView;
 	
 	// top-level items
-	TArray<FBoneTreeItemPtr> _rootBones;
+	TArray<FBoneTreeItemPtr> _rootBoneItems;
+
+	// all items in the tree (for easy searching)
+	TArray<TSharedRef<FBoneTreeItem>> _allBoneItems;
 };
 
 } // namespace Skelly

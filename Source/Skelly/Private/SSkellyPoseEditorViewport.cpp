@@ -38,6 +38,14 @@ void SPoseEditorViewport::Construct(const FArguments& InArgs, TSharedPtr<FPoseEd
 	SEditorViewport::Construct(SEditorViewport::FArguments());
 }
 
+void SPoseEditorViewport::Refresh()
+{
+	if (_poseEditorViewportClient.IsValid())
+	{
+		_poseEditorViewportClient->Invalidate();
+	}
+}
+
 TSharedRef<FEditorViewportClient> SPoseEditorViewport::MakeEditorViewportClient()
 {
 	TSharedPtr<FPoseEditor> poseEditor = _poseEditorWeakPtr.Pin();

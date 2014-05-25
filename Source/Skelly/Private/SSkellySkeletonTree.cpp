@@ -53,11 +53,13 @@ public:
 
 void SSkeletonTree::Construct(const FArguments& inArgs)
 {
+	OnSelectionChanged = inArgs._OnSelectionChanged;
+
 	ChildSlot
 	[
 		SAssignNew(_treeView, SBoneTreeView)
 		.SelectionMode(ESelectionMode::Single)
-		.TreeItemsSource(&_rootBones)
+		.TreeItemsSource(&_rootBoneItems)
 		// get child items for any given parent item
 		.OnGetChildren(this, &SSkeletonTree::TreeView_OnGetChildren)
 		// generate a widget for each item
@@ -68,9 +70,9 @@ void SSkeletonTree::Construct(const FArguments& inArgs)
 
 void SSkeletonTree::Populate(const FReferenceSkeleton& inReferenceSkeleton)
 {
-	_rootBones.Empty();
+	_rootBoneItems.Empty();
+	_allBoneItems.Empty(inReferenceSkeleton.GetNum());
 
-	TArray<TSharedRef<FBoneTreeItem>> allBones;
 	for (int32 boneIndex = 0; boneIndex < inReferenceSkeleton.GetNum(); ++boneIndex)
 	{
 		FName boneName = inReferenceSkeleton.GetBoneName(boneIndex);
@@ -78,7 +80,7 @@ void SSkeletonTree::Populate(const FReferenceSkeleton& inReferenceSkeleton)
 		TSharedRef<FBoneTreeItem> newBone = MakeShareable(new FBoneTreeItem(boneName));
 		if (parentBoneIndex == INDEX_NONE)
 		{
-			_rootBones.Add(newBone);
+			_rootBoneItems.Add(newBone);
 		}
 		else if (parentBoneIndex >= 0)
 		{
@@ -87,11 +89,11 @@ void SSkeletonTree::Populate(const FReferenceSkeleton& inReferenceSkeleton)
 			check(parentBoneIndex < boneIndex);
 			if (parentBoneIndex < boneIndex)
 			{
-				newBone->Parent = allBones[parentBoneIndex];
-				allBones[parentBoneIndex]->Children.Add(newBone);
+				newBone->Parent = _allBoneItems[parentBoneIndex];
+				_allBoneItems[parentBoneIndex]->Children.Add(newBone);
 			}
 		}
-		allBones.Add(newBone);
+		_allBoneItems.Add(newBone);
 		// fully expand the tree by default
 		_treeView->SetItemExpansion(newBone, true);
 	}
@@ -99,7 +101,41 @@ void SSkeletonTree::Populate(const FReferenceSkeleton& inReferenceSkeleton)
 	_treeView->RequestTreeRefresh();
 }
 
+void SSkeletonTree::GetSelectedBoneNames(TArray<FName>& outBoneNames) const
+{
+	auto selectedItems = _treeView->GetSelectedItems();
+	for (const auto& item : selectedItems)
+	{
+		outBoneNames.Add(item->BoneName);
+	}
+}
 
+void SSkeletonTree::SetSelectedBoneNames(const TArray<FName>& inBoneNames)
+{
+	_treeView->ClearSelection();
+
+	for (const auto& boneItem : _allBoneItems)
+	{
+		for (const auto& boneName : inBoneNames)
+		{
+			if (boneItem->BoneName == boneName)
+			{
+				_treeView->SetItemSelection(boneItem, true);
+				// if only one bone is selected make sure the user can see it
+				if (inBoneNames.Num() == 1)
+				{
+					_treeView->RequestScrollIntoView(boneItem);
+				}
+				break;
+			}
+		}
+		// no need to keep going once all the required bones have been selected
+		if (_treeView->GetNumItemsSelected() == inBoneNames.Num())
+		{
+			break;
+		}
+	}
+}
 
 TSharedRef<ITableRow> SSkeletonTree::TreeView_OnGenerateRow(
 	FBoneTreeItemPtr inItem, const TSharedRef<STableViewBase>& inOwnerTable
@@ -133,13 +169,12 @@ void SSkeletonTree::TreeView_OnSelectionChanged(
 	FBoneTreeItemPtr inSelection, ESelectInfo::Type inSelectInfo
 )
 {
-	if (inSelection.IsValid())
+	// only invoke the delegate if the user explicitly selected a bone in the tree view,
+	// otherwise an endless loop may occur when SSkeletonTree attempts to change the selection
+	// programmatically
+	if (inSelectInfo != ESelectInfo::Direct)
 	{
-
-	}
-	else // selection has been cleared
-	{
-		
+		OnSelectionChanged.ExecuteIfBound();
 	}
 }
 
