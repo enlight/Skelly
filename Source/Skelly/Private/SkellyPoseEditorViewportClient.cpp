@@ -118,6 +118,74 @@ void FPoseEditorViewportClient::ProcessClick(
 	}
 }
 
+void FPoseEditorViewportClient::SetWidgetMode(FWidget::EWidgetMode inNewMode)
+{
+	_widgetMode = inNewMode;
+	Invalidate();
+}
+
+bool FPoseEditorViewportClient::CanSetWidgetMode(FWidget::EWidgetMode inNewMode) const
+{
+	return true;
+}
+
+FWidget::EWidgetMode FPoseEditorViewportClient::GetWidgetMode() const
+{
+	// the transform widget should only be displayed if a single bone is selected
+	if (_skeletalMeshPreviewComponent.IsValid())
+	{
+		if (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1)
+		{
+			return _widgetMode;
+		}
+	}
+	return FWidget::WM_None;
+}
+
+FVector FPoseEditorViewportClient::GetWidgetLocation() const
+{
+	if (_skeletalMeshPreviewComponent.IsValid())
+	{
+		// place the transform widget at the location of the currently selected bone 
+		// (in world space)
+		if (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1)
+		{
+			return _skeletalMeshPreviewComponent->GetBoneMatrix(
+				_skeletalMeshPreviewComponent->BonesOfInterest[0]
+			).GetOrigin();
+		}
+	}
+	return FVector::ZeroVector;
+}
+
+FMatrix FPoseEditorViewportClient::GetWidgetCoordSystem() const
+{
+	if (GetWidgetCoordSystemSpace() == COORD_Local)
+	{
+		if (_skeletalMeshPreviewComponent.IsValid())
+		{
+			if (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1)
+			{
+				return _skeletalMeshPreviewComponent->GetBoneMatrix(
+					_skeletalMeshPreviewComponent->BonesOfInterest[0]
+				).RemoveTranslation();
+			}
+		}
+	}
+	return FMatrix::Identity;
+}
+
+void FPoseEditorViewportClient::SetWidgetCoordSystemSpace(ECoordSystem inNewCoordSystem)
+{
+	GEditorModeTools().SetCoordSystem(inNewCoordSystem);
+	Invalidate();
+}
+
+ECoordSystem FPoseEditorViewportClient::GetWidgetCoordSystemSpace() const
+{
+	return GEditorModeTools().GetCoordSystem();
+}
+
 void FPoseEditorViewportClient::OnShowBones()
 {
 	auto previewComponent = _skeletalMeshPreviewComponent.Get();

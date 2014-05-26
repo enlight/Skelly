@@ -49,6 +49,13 @@ public: // FEditorViewportClient interface
 		FSceneView& inView, HHitProxy* inHitProxy, FKey inKey, EInputEvent inEvent, 
 		uint32 inHitX, uint32 inHitY
 	) override;
+	virtual void SetWidgetMode(FWidget::EWidgetMode inNewMode) override;
+	virtual bool CanSetWidgetMode(FWidget::EWidgetMode inNewMode) const override;
+	virtual FWidget::EWidgetMode GetWidgetMode() const override;
+	virtual FVector GetWidgetLocation() const override;
+	virtual FMatrix GetWidgetCoordSystem() const override;
+	virtual void SetWidgetCoordSystemSpace(ECoordSystem inNewCoordSystem) override;
+	virtual ECoordSystem GetWidgetCoordSystemSpace() const override;
 
 public: // event handlers for the viewport toolbar (bound by the viewport)
 	void OnShowBones();
@@ -75,6 +82,8 @@ private:
 
 private:
 	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
+	// the current transform widget mode
+	FWidget::EWidgetMode _widgetMode;
 };
 
 } // namespace Skelly
