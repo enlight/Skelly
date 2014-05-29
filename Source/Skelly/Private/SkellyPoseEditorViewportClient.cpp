@@ -26,6 +26,7 @@
 #include "SkellyPrivatePCH.h"
 #include "SkellyPoseEditorViewportClient.h"
 #include "PreviewScene.h"
+#include "AnimGraphDefinitions.h"
 
 /** Hit proxy for bones to allow selection of bones in a viewport using a mouse. */
 struct HSkellyBoneProxy : public HHitProxy
@@ -43,6 +44,8 @@ namespace Skelly {
 
 FPoseEditorViewportClient::FPoseEditorViewportClient(FPreviewScene* inPreviewScene)
 	: FEditorViewportClient(inPreviewScene)
+	, _widgetMode(FWidget::WM_Rotate)
+	, _bWidgetIsBeingManipulated(false)
 {
 	EngineShowFlags.Game = 0;
 	EngineShowFlags.SetSnap(false);
@@ -118,6 +121,104 @@ void FPoseEditorViewportClient::ProcessClick(
 	}
 }
 
+void FPoseEditorViewportClient::TrackingStarted(const struct FInputEventState& InInputState, bool bIsDraggingWidget, bool bNudge)
+{
+	const auto boneIndex = GetSelectedBoneIndex();
+	if ((boneIndex != INDEX_NONE) && bIsDraggingWidget)
+	{
+		_bWidgetIsBeingManipulated = true;
+	}
+}
+
+void FPoseEditorViewportClient::TrackingStopped()
+{
+	if (_bWidgetIsBeingManipulated)
+	{
+		_bWidgetIsBeingManipulated = false;
+	}
+	Invalidate();
+}
+
+bool FPoseEditorViewportClient::InputWidgetDelta(
+	FViewport* inViewport, EAxisList::Type inCurrentAxis, 
+	FVector& inDrag, FRotator& inRot, FVector& inScale
+)
+{
+	bool bInputHandled = false;
+
+	if (!_bWidgetIsBeingManipulated
+		|| (inCurrentAxis == EAxisList::None)
+		|| !_skeletalMeshPreviewComponent.IsValid())
+	{
+		return bInputHandled;
+	}
+
+	bInputHandled = true;
+	const auto boneIndex = GetSelectedBoneIndex();
+	if (boneIndex != INDEX_NONE)
+	{
+		const auto boneName = _skeletalMeshPreviewComponent->GetBoneName(boneIndex);
+		auto& skeletalControl = _skeletalMeshPreviewComponent->PreviewInstance->ModifyBone(boneName);
+		// by default ModifyBone() sets up the skeletal control to replace rotation and translation
+		// so scaling must be enabled separately
+		skeletalControl.ScaleMode = EBoneModificationMode::BMM_Replace;
+		skeletalControl.ScaleSpace = EBoneControlSpace::BCS_BoneSpace;
+
+		FTransform controlTransform(
+			skeletalControl.Rotation, skeletalControl.Translation, skeletalControl.Scale
+		);
+		// If A and B are FTransform(s) and v is an FVector then 
+		//    (A * B).TransformVector(v) == B.TransformVector(A.TransformVector(v))
+		// => v x (A x B) = (v x A) x B
+		//
+		// Now consider the following transforms
+		// W: bone to world, S: skeletal control, P: parent bone transform, C: component to world
+		//
+		// Get the bone space to world space transform W = S x P x C
+		FTransform worldTransform = _skeletalMeshPreviewComponent->GetBoneTransform(boneIndex);
+		// Invert the bone space to world space transform to obtain the world space to bone space 
+		// transform, however the resulting transform may not be the base bone space transform 
+		// because the skeletal control transform may have been applied previously, so remove the 
+		// previously applied skeletal control transform to get the base bone space transform.
+		// Note: the following deduction may not be 100% correct.
+		//    W^-1     = (S x P x C)^-1
+		//             = C^-1 x P^-1 x S^-1 
+		// => W^-1 x S = C^-1 x P^-1 x S^-1 x S // undo previous skeletal control transform
+		// => W^-1 x S = C^-1 x P^-1            // to obtain the base bone space transform
+		FTransform baseTransform = worldTransform.InverseSafe() * controlTransform;
+
+		const bool bShouldRotate = (_widgetMode == FWidget::WM_Rotate);
+		const bool bShouldTranslate = (_widgetMode == FWidget::WM_Translate);
+		const bool bShouldScale = (_widgetMode == FWidget::WM_Scale);
+
+		if (bShouldRotate)
+		{
+			FVector axis;
+			float angle;
+			inRot.Quaternion().ToAxisAndAngle(axis, angle);
+			// convert rotation axis from world space to bone space
+			const auto boneSpaceAxis = baseTransform.TransformVector(axis);
+			FQuat deltaQuat(boneSpaceAxis, angle);
+
+			skeletalControl.Rotation = (controlTransform * FTransform(deltaQuat)).Rotator();
+		}
+
+		if (bShouldTranslate)
+		{
+			skeletalControl.Translation += baseTransform.TransformVector(inDrag);
+		}
+
+		if (bShouldScale)
+		{
+			skeletalControl.Scale += inScale;
+		}
+
+		Invalidate();
+	}
+	
+	return bInputHandled;
+}
+
 void FPoseEditorViewportClient::SetWidgetMode(FWidget::EWidgetMode inNewMode)
 {
 	_widgetMode = inNewMode;
@@ -150,9 +251,8 @@ FVector FPoseEditorViewportClient::GetWidgetLocation() const
 		// (in world space)
 		if (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1)
 		{
-			return _skeletalMeshPreviewComponent->GetBoneMatrix(
-				_skeletalMeshPreviewComponent->BonesOfInterest[0]
-			).GetOrigin();
+			return _skeletalMeshPreviewComponent->GetBoneMatrix(GetSelectedBoneIndex())
+				.GetOrigin();
 		}
 	}
 	return FVector::ZeroVector;
@@ -166,9 +266,8 @@ FMatrix FPoseEditorViewportClient::GetWidgetCoordSystem() const
 		{
 			if (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1)
 			{
-				return _skeletalMeshPreviewComponent->GetBoneMatrix(
-					_skeletalMeshPreviewComponent->BonesOfInterest[0]
-				).RemoveTranslation();
+				return _skeletalMeshPreviewComponent->GetBoneMatrix(GetSelectedBoneIndex())
+					.RemoveTranslation();
 			}
 		}
 	}
@@ -183,7 +282,7 @@ void FPoseEditorViewportClient::SetWidgetCoordSystemSpace(ECoordSystem inNewCoor
 
 ECoordSystem FPoseEditorViewportClient::GetWidgetCoordSystemSpace() const
 {
-	return GEditorModeTools().GetCoordSystem();
+	return (_widgetMode == FWidget::WM_Scale) ? COORD_Local : GEditorModeTools().GetCoordSystem();
 }
 
 void FPoseEditorViewportClient::OnShowBones()
@@ -342,6 +441,18 @@ void FPoseEditorViewportClient::FocusViewportOnPreviewComponent()
 		FocusViewportOnBox(bounds.GetBox(), true);
 		FEditorViewportClient::Invalidate();
 	}
+}
+
+int32 FPoseEditorViewportClient::GetSelectedBoneIndex() const
+{
+	if (_skeletalMeshPreviewComponent.IsValid())
+	{
+		if (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1)
+		{
+			return _skeletalMeshPreviewComponent->BonesOfInterest[0];
+		}
+	}
+	return INDEX_NONE;
 }
 
 } // namespace Skelly

@@ -29,6 +29,7 @@ class FPreviewScene;
 class UDebugSkelMeshComponent;
 class FSceneView;
 class HHitProxy;
+struct FInputEventState;
 
 namespace Skelly {
 
@@ -48,6 +49,14 @@ public: // FEditorViewportClient interface
 	virtual void ProcessClick(
 		FSceneView& inView, HHitProxy* inHitProxy, FKey inKey, EInputEvent inEvent, 
 		uint32 inHitX, uint32 inHitY
+	) override;
+	virtual void TrackingStarted(
+		const FInputEventState& inInputState, bool bIsDraggingWidget, bool bNudge
+	) override;
+	virtual void TrackingStopped() override;
+	virtual bool InputWidgetDelta(
+		FViewport* inViewport, EAxisList::Type inCurrentAxis, 
+		FVector& inDrag, FRotator& inRot, FVector& inScale
 	) override;
 	virtual void SetWidgetMode(FWidget::EWidgetMode inNewMode) override;
 	virtual bool CanSetWidgetMode(FWidget::EWidgetMode inNewMode) const override;
@@ -79,11 +88,14 @@ private:
 	);
 	void UpdatePreviewSceneSetup();
 	void FocusViewportOnPreviewComponent();
+	int32 GetSelectedBoneIndex() const;
 
 private:
 	TWeakObjectPtr<UDebugSkelMeshComponent> _skeletalMeshPreviewComponent;
 	// the current transform widget mode
 	FWidget::EWidgetMode _widgetMode;
+	// true when the user is manipulating a transform widget
+	bool _bWidgetIsBeingManipulated;
 };
 
 } // namespace Skelly

@@ -173,6 +173,8 @@ void FPoseEditor::InitPoseEditor(
 			SetPreviewSkeletalMesh(previewMesh);
 		}
 	}
+
+	_skeletalMeshPreviewComponent->EnablePreview(true, nullptr, nullptr);
 }
 
 TSharedRef<FTabManager::FLayout> FPoseEditor::GenerateDefaultStandaloneLayout()

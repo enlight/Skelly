@@ -36,7 +36,8 @@ namespace UnrealBuildTool.Rules
                     "WorkspaceMenuStructure",
                     "ContentBrowser",
                     "EditorStyle",
-                    "InputCore"
+                    "InputCore",
+                    "AnimGraph"
 					// ... add private dependencies that you statically link with here ...
 				}
 			);
