@@ -328,6 +328,32 @@ void FPoseEditor::Viewport_OnSelectionChanged()
 	}
 }
 
+void FPoseEditor::PostUndo(bool bSuccess)
+{
+	if (bSuccess)
+	{
+		FSlateApplication::Get().DismissAllMenus();
+
+		if (_viewport.IsValid())
+		{
+			_viewport->Refresh();
+		}
+	}
+}
+
+void FPoseEditor::PostRedo(bool bSuccess)
+{
+	if (bSuccess)
+	{
+		FSlateApplication::Get().DismissAllMenus();
+
+		if (_viewport.IsValid())
+		{
+			_viewport->Refresh();
+		}
+	}
+}
+
 } // namespace Skelly
 
 #undef LOCTEXT_NAMESPACE

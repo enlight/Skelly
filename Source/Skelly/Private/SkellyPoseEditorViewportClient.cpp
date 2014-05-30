@@ -40,12 +40,15 @@ struct HSkellyBoneProxy : public HHitProxy
 
 IMPLEMENT_HIT_PROXY(HSkellyBoneProxy, HHitProxy);
 
+#define LOCTEXT_NAMESPACE "Skelly.PoseEditorViewportClient"
+
 namespace Skelly {
 
 FPoseEditorViewportClient::FPoseEditorViewportClient(FPreviewScene* inPreviewScene)
 	: FEditorViewportClient(inPreviewScene)
 	, _widgetMode(FWidget::WM_Rotate)
 	, _bWidgetIsBeingManipulated(false)
+	, _bInTransaction(false)
 {
 	EngineShowFlags.Game = 0;
 	EngineShowFlags.SetSnap(false);
@@ -124,8 +127,39 @@ void FPoseEditorViewportClient::ProcessClick(
 void FPoseEditorViewportClient::TrackingStarted(const struct FInputEventState& InInputState, bool bIsDraggingWidget, bool bNudge)
 {
 	const auto boneIndex = GetSelectedBoneIndex();
-	if ((boneIndex != INDEX_NONE) && bIsDraggingWidget)
+	if ((boneIndex != INDEX_NONE) && _skeletalMeshPreviewComponent.IsValid() && bIsDraggingWidget)
 	{
+		// enable undo/redo of bone manipulation
+		if (!_bInTransaction)
+		{
+			const FText boneName = 
+				FText::FromName(_skeletalMeshPreviewComponent->GetBoneName(boneIndex));
+
+			switch (_widgetMode)
+			{
+				case FWidget::WM_Rotate:
+					GEditor->BeginTransaction(
+						FText::Format(LOCTEXT("Viewport_RotateBone", "Rotate {0} Bone"), boneName)
+					);
+					break;
+
+				case FWidget::WM_Translate:
+					GEditor->BeginTransaction(
+						FText::Format(LOCTEXT("Viewport_TranslateBone", "Translate {0} Bone"), boneName)
+					);
+					break;
+
+				case FWidget::WM_Scale:
+					GEditor->BeginTransaction(
+						FText::Format(LOCTEXT("Viewport_ScaleBone", "Scale {0} Bone"), boneName)
+					);
+					break;
+			}
+			_skeletalMeshPreviewComponent->PreviewInstance->SetFlags(RF_Transactional);
+			_skeletalMeshPreviewComponent->PreviewInstance->Modify();
+			_bInTransaction = true;
+		}
+
 		_bWidgetIsBeingManipulated = true;
 	}
 }
@@ -134,6 +168,11 @@ void FPoseEditorViewportClient::TrackingStopped()
 {
 	if (_bWidgetIsBeingManipulated)
 	{
+		if (_bInTransaction)
+		{
+			GEditor->EndTransaction();
+			_bInTransaction = false;
+		}
 		_bWidgetIsBeingManipulated = false;
 	}
 	Invalidate();
@@ -456,3 +495,5 @@ int32 FPoseEditorViewportClient::GetSelectedBoneIndex() const
 }
 
 } // namespace Skelly
+
+#undef LOCTEXT_NAMESPACE

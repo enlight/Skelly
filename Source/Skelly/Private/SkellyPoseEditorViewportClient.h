@@ -96,6 +96,8 @@ private:
 	FWidget::EWidgetMode _widgetMode;
 	// true when the user is manipulating a transform widget
 	bool _bWidgetIsBeingManipulated;
+	// true when there is an active undo/redo transaction
+	bool _bInTransaction;
 };
 
 } // namespace Skelly

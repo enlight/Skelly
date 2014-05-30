@@ -33,7 +33,7 @@ class UDebugSkelMeshComponent;
 namespace Skelly {
 
 /** Editor for USkellyPose assets. */
-class FPoseEditor : public FAssetEditorToolkit, public FGCObject
+class FPoseEditor : public FAssetEditorToolkit, public FEditorUndoClient, public FGCObject
 {
 public: // FAssetEditorToolkit interface
 	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& tabManager) override;
@@ -43,6 +43,10 @@ public: // FAssetEditorToolkit interface
 	virtual FText GetBaseToolkitName() const override;
 	virtual FString GetWorldCentricTabPrefix() const override;
 	virtual FLinearColor GetWorldCentricTabColorScale() const override;
+
+public: // FEditorUndoClient interface
+	virtual void PostUndo(bool bSuccess) override;
+	virtual void PostRedo(bool bSuccess) override;
 
 public: // FGCObject interface
 	virtual void AddReferencedObjects(FReferenceCollector& collector) override;
