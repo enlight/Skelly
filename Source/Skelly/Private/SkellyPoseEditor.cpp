@@ -118,6 +118,8 @@ FPoseEditor::~FPoseEditor()
 	{
 		_skeletalMeshPreviewComponent->RemoveFromRoot();
 	}
+
+	GEditor->UnregisterForUndo(this);
 }
 
 void FPoseEditor::Startup()
@@ -136,6 +138,8 @@ void FPoseEditor::InitPoseEditor(
 )
 {
 	check(poseToEdit);
+
+	GEditor->RegisterForUndo(this);
 
 	_currentPose = poseToEdit;
 	_viewport = SNew(SPoseEditorViewport, SharedThis(this));
