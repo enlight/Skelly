@@ -30,6 +30,10 @@
 #include "SkellyPoseEditorViewportClient.h"
 #include "SkellyPoseEditorViewportCommands.h"
 #include "SSkellySkeletonTree.h"
+#include "PropertyEditorModule.h"
+#include "IDetailsView.h"
+#include "SkellyBone.h"
+#include "AnimGraphDefinitions.h"
 
 #define LOCTEXT_NAMESPACE "Skelly.PoseEditor"
 
@@ -114,6 +118,11 @@ FPoseEditor::FPoseEditor()
 
 FPoseEditor::~FPoseEditor()
 {
+	if (_detailsViewBone)
+	{
+		_detailsViewBone->RemoveFromRoot();
+	}
+
 	if (_skeletalMeshPreviewComponent)
 	{
 		_skeletalMeshPreviewComponent->RemoveFromRoot();
@@ -152,6 +161,19 @@ void FPoseEditor::InitPoseEditor(
 		viewportClient->OnSelectionChanged.BindSP(this, &FPoseEditor::Viewport_OnSelectionChanged);
 	}
 	
+	FDetailsViewArgs detailsViewArgs;
+	detailsViewArgs.bAllowSearch = true;
+	detailsViewArgs.bLockable = false;
+	detailsViewArgs.bUpdatesFromSelection = false;
+	detailsViewArgs.bHideActorNameArea = true;
+	detailsViewArgs.bObjectsUseNameArea = false;
+	//detailsViewArgs.NotifyHook = this;
+
+	auto& propertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(
+		TEXT("PropertyEditor")
+	);
+	_detailsView = propertyEditorModule.CreateDetailView(detailsViewArgs);
+
 	FAssetEditorToolkit::InitAssetEditor(
 		toolkitMode, editWithinLevelEditor, PoseEditorAppName, GenerateDefaultStandaloneLayout(),
 		true, true, poseToEdit
@@ -162,6 +184,9 @@ void FPoseEditor::InitPoseEditor(
 	_skeletalMeshPreviewComponent = NewObject<UDebugSkelMeshComponent>();
 	// ensure the preview component is kept alive until this editor is destroyed
 	_skeletalMeshPreviewComponent->AddToRoot();
+
+	_detailsViewBone = NewObject<USkellyBone>();
+	_detailsViewBone->AddToRoot();
 
 	if (poseToEdit && poseToEdit->GetSkeleton())
 	{
@@ -245,7 +270,10 @@ TSharedRef<SDockTab> FPoseEditor::OnSpawnViewportTab(const FSpawnTabArgs& args)
 TSharedRef<SDockTab> FPoseEditor::OnSpawnDetailsTab(const FSpawnTabArgs& args)
 {
 	return SNew(SDockTab)
-		.Label(_detailsTabTitle);
+		.Label(_detailsTabTitle)
+		[
+			_detailsView.ToSharedRef()
+		];
 }
 
 void FPoseEditor::SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh)
@@ -327,6 +355,39 @@ void FPoseEditor::GetSelectedBoneNames(TArray<FName>& outBoneNames) const
 	}
 }
 
+UObject* FPoseEditor::GetDetailsViewSourceObject()
+{
+	bool bSingleBoneSelected = 
+		_skeletalMeshPreviewComponent && (_skeletalMeshPreviewComponent->BonesOfInterest.Num() == 1);
+	
+	if (bSingleBoneSelected)
+	{
+		auto boneIndex = _skeletalMeshPreviewComponent->BonesOfInterest[0];
+		auto boneName = _skeletalMeshPreviewComponent->GetBoneName(boneIndex);
+		_detailsViewBone->BoneName = boneName;
+		_detailsViewBone->ParentBoneName = _skeletalMeshPreviewComponent->GetParentBone(boneName);
+		auto* skeletalControl = 
+			_skeletalMeshPreviewComponent->PreviewInstance->FindModifiedBone(boneName);
+
+		// if the bone has been modified grab the transform from the skeletal control, 
+		// otherwise use the local transform from the reference pose
+		if (skeletalControl)
+		{
+			_detailsViewBone->BoneTransform.SetComponents(
+				skeletalControl->Rotation.Quaternion(), skeletalControl->Translation, 
+				skeletalControl->Scale
+			);
+		}
+		else
+		{
+			_detailsViewBone->BoneTransform =
+				_skeletalMeshPreviewComponent->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex];
+		}
+		return _detailsViewBone;
+	}
+	return nullptr;
+}
+
 void FPoseEditor::SkeletonTree_OnSelectionChanged()
 {
 	TArray<FName> boneNames;
@@ -339,6 +400,12 @@ void FPoseEditor::SkeletonTree_OnSelectionChanged()
 	{
 		_viewport->Refresh();
 	}
+
+	if (_detailsView.IsValid())
+	{
+		bool bForceRefresh = true;
+		_detailsView->SetObject(GetDetailsViewSourceObject(), bForceRefresh);
+	}
 }
 
 void FPoseEditor::Viewport_OnSelectionChanged()
@@ -349,6 +416,12 @@ void FPoseEditor::Viewport_OnSelectionChanged()
 	if (_skeletonTree.IsValid())
 	{
 		_skeletonTree->SetSelectedBoneNames(boneNames);
+	}
+
+	if (_detailsView.IsValid())
+	{
+		bool bForceRefresh = true;
+		_detailsView->SetObject(GetDetailsViewSourceObject(), bForceRefresh);
 	}
 }
 

@@ -37,7 +37,8 @@ namespace UnrealBuildTool.Rules
                     "ContentBrowser",
                     "EditorStyle",
                     "InputCore",
-                    "AnimGraph"
+                    "AnimGraph",
+                    "PropertyEditor"
 					// ... add private dependencies that you statically link with here ...
 				}
 			);

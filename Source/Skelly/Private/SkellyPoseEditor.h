@@ -26,9 +26,11 @@
 #include "Toolkits/AssetEditorToolkit.h"
 #include "PreviewScene.h"
 
+class USkellyBone;
 class USkellyPose;
 class USkeletalMesh;
 class UDebugSkelMeshComponent;
+class IDetailsView;
 
 namespace Skelly {
 
@@ -71,6 +73,8 @@ private:
 	void SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh);
 	void SetSelectedBoneNames(const TArray<FName>& inBoneNames);
 	void GetSelectedBoneNames(TArray<FName>& outBoneNames) const;
+	// get the UObject whose properties should be displayed in the details view
+	UObject* GetDetailsViewSourceObject();
 
 private: // event handlers
 	TSharedRef<SDockTab> OnSpawnSkeletonTab(const FSpawnTabArgs& args);
@@ -102,6 +106,12 @@ private:
 
 	// the skeleton tree displayed on the skeleton tab
 	TSharedPtr<class SSkeletonTree> _skeletonTree;
+
+	// the details view displayed on the details tab
+	TSharedPtr<IDetailsView> _detailsView;
+
+	// bone whose properties will be displayed on the details tab
+	USkellyBone* _detailsViewBone;
 
 private:
 	static FName PoseEditorAppName;
