@@ -69,6 +69,8 @@ public:
 private:
 	TSharedRef<FTabManager::FLayout> GenerateDefaultStandaloneLayout();
 	void SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh);
+	void SetSelectedBoneNames(const TArray<FName>& inBoneNames);
+	void GetSelectedBoneNames(TArray<FName>& outBoneNames) const;
 
 private: // event handlers
 	TSharedRef<SDockTab> OnSpawnSkeletonTab(const FSpawnTabArgs& args);

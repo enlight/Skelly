@@ -295,39 +295,59 @@ void FPoseEditor::SetPreviewSkeletalMesh(USkeletalMesh* inPreviewSkeletalMesh)
 	}
 }
 
-void FPoseEditor::SkeletonTree_OnSelectionChanged()
+void FPoseEditor::SetSelectedBoneNames(const TArray<FName>& inBoneNames)
 {
 	if (_skeletalMeshPreviewComponent)
 	{
-		TArray<FName> boneNames;
-		_skeletonTree->GetSelectedBoneNames(boneNames);
 		// preallocate the array since the final size is already known
-		_skeletalMeshPreviewComponent->BonesOfInterest.Empty(boneNames.Num());
-		_skeletalMeshPreviewComponent->BonesOfInterest.AddUninitialized(boneNames.Num());
+		_skeletalMeshPreviewComponent->BonesOfInterest.Empty(inBoneNames.Num());
+		_skeletalMeshPreviewComponent->BonesOfInterest.AddUninitialized(inBoneNames.Num());
 
-		for (int32 i = 0; i < boneNames.Num(); ++i)
+		for (int32 i = 0; i < inBoneNames.Num(); ++i)
 		{
 			_skeletalMeshPreviewComponent->BonesOfInterest[i] =
-				_skeletalMeshPreviewComponent->GetBoneIndex(boneNames[i]);
-			
-			// force the viewport to redraw
-			if (_viewport.IsValid())
-			{
-				_viewport->Refresh();
-			}
+				_skeletalMeshPreviewComponent->GetBoneIndex(inBoneNames[i]);
 		}
+	}
+}
+
+void FPoseEditor::GetSelectedBoneNames(TArray<FName>& outBoneNames) const
+{
+	if (_skeletalMeshPreviewComponent)
+	{
+		outBoneNames.Empty(_skeletalMeshPreviewComponent->BonesOfInterest.Num());
+		for (auto boneIndex : _skeletalMeshPreviewComponent->BonesOfInterest)
+		{
+			outBoneNames.Add(_skeletalMeshPreviewComponent->GetBoneName(boneIndex));
+		}
+	}
+	else
+	{
+		outBoneNames.Empty();
+	}
+}
+
+void FPoseEditor::SkeletonTree_OnSelectionChanged()
+{
+	TArray<FName> boneNames;
+	_skeletonTree->GetSelectedBoneNames(boneNames);
+		
+	SetSelectedBoneNames(boneNames);
+
+	// force the viewport to redraw
+	if (_viewport.IsValid())
+	{
+		_viewport->Refresh();
 	}
 }
 
 void FPoseEditor::Viewport_OnSelectionChanged()
 {
-	if (_skeletalMeshPreviewComponent && _skeletonTree.IsValid())
+	TArray<FName> boneNames;
+	GetSelectedBoneNames(boneNames);
+		
+	if (_skeletonTree.IsValid())
 	{
-		TArray<FName> boneNames;
-		for (auto boneIndex : _skeletalMeshPreviewComponent->BonesOfInterest)
-		{
-			boneNames.Add(_skeletalMeshPreviewComponent->GetBoneName(boneIndex));
-		}
 		_skeletonTree->SetSelectedBoneNames(boneNames);
 	}
 }
