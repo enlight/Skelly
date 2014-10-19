@@ -1,4 +1,4 @@
-#Skelly (WIP)
+#Skelly (Terminated)
 
 An Unreal Engine 4 plugin for creating semi-procedural character animations.
 
