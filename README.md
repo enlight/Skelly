@@ -1,16 +1,16 @@
-#Skelly (Terminated)
+# Skelly (Terminated)
 
 An Unreal Engine 4 plugin for creating semi-procedural character animations.
 
-##Overview
+## Overview
 
 Creating key-framed animations is tedious and time consuming, for me anyway. The aim of this plugin is to allow simple in-editor animation authoring by providing the user with the ability to create character poses, and to interpolate between those poses using various procedural methods at runtime. Yes, you still need to create key-frames, but fewer than usual, and you can do it in the editor. This is all very experimental!
 
 Here's some inspiration: [Animation Bootcamp: An Indie Approach to Procedural Animation](http://www.gdcvault.com/play/1020583/Animation-Bootcamp-An-Indie-Approach)
 
-##Installation
+## Installation
 
-###Using the Binary UE4 Release
+### Using the Binary UE4 Release
 When using a binary release of UE4 you can extract a binary release of the plugin (if available) to either of the following locations:
 >```<UE4 Installation Location>/<Engine Version>/Engine/Plugins/Editor/Skelly/```
 >
@@ -20,7 +20,7 @@ If you extract the plugin binaries into your project's plugins directory it will
 
 Alternatively, you can either clone or extract the plugin source to your project's plugins directory, which is covered next. Note that placing the plugin source into the engine plugins directory probably won't work because I don't think the binary UE4 release is configured to build engine plugins from source (but I haven't tried yet).
 
-###Using the GitHub UE4 Release
+### Using the GitHub UE4 Release
 If you'd like the plugin to be available for all your UE4 projects you need to clone or extract the plugin source to:
 >```<UE4 Clone Location>/Engine/Plugins/Editor/Skelly/```
 
@@ -42,14 +42,14 @@ Then follow these steps on Windows (adjust as needed on other OSes):
 
 Note that your existing project must have a **Source** subdirectory with a couple of **.Target.cs** files in it, if it doesn't you may need to follow the steps in the **Building from Scratch** section below and then copy the built plugin into your project(s).
 
-###Editor Configuration
+### Editor Configuration
 Once you've got a binary version of the plugin (either by building or downloading) follow these steps:
 
 1. Open **Window->Plugins** from the main menu of the Unreal Editor.
 2. Navigate to the **Built-in/Editor/Animation** or the **Installed/Editor/Animation** sub-category, you should see the **Skelly** plugin in the list.
 3. Enable the plugin and restart the editor if requested to do so.
 
-##Building from Scratch
+## Building from Scratch
 
 The following steps explain how to build the plugin as part of a new (mostly) empty project, in case you hit any issues while attempting to build it as part of an existing project, or as an engine plugin. 
 
